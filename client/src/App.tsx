@@ -150,6 +150,33 @@ function App() {
     }
   };
 
+  const handleDownloadLastBackup = async () => {
+    try {
+      const backupsList = await firebaseService.listBackups();
+      if (backupsList.length === 0) {
+        alert('Nenhum backup encontrado');
+        return;
+      }
+      const lastBackup = backupsList[0];
+      const restoredData = await firebaseService.restoreBackup(lastBackup.id);
+      if (restoredData) {
+        const dataStr = JSON.stringify(restoredData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Erro ao baixar backup:', error);
+      alert('Erro ao baixar backup');
+    }
+  };
+
   const toggleTheme = () => setIsDark(!isDark);
 
   // Calcular VR FDS que falta gastar
@@ -365,11 +392,11 @@ function App() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowBackupDialog(true)}
+                    onClick={handleDownloadLastBackup}
                     className="gap-2"
                   >
-                    <Cloud className="w-4 h-4" />
-                    Backups
+                    <Download className="w-4 h-4" />
+                    Backup
                   </Button>
                   <Button
                     variant="ghost"
