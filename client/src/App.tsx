@@ -94,7 +94,9 @@ function App() {
     
     const interval = setInterval(async () => {
       try {
-        await firebaseService.backup({ meses, timestamp: new Date().toISOString() });
+        console.log('Executando backup automático...');
+        await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' });
+        console.log('Backup automático realizado com sucesso');
       } catch (error) {
         console.error('Erro ao fazer backup automático:', error);
       }
@@ -190,6 +192,17 @@ function App() {
     } catch (error) {
       console.error('Erro ao baixar backup:', error);
       alert('Erro ao baixar backup');
+    }
+  };
+
+  const handleBackupToFirebase = async () => {
+    try {
+      const backupName = `Backup ${new Date().toLocaleString('pt-BR')}`;
+      await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' }, backupName);
+      alert('Backup salvo com sucesso no Firebase!');
+    } catch (error) {
+      console.error('Erro ao fazer backup:', error);
+      alert('Erro ao fazer backup: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   };
 
@@ -429,6 +442,16 @@ function App() {
                 >
                   <Cloud className="w-4 h-4" />
                   Login Google
+                </Button>
+              )}
+              {user && (
+                <Button
+                  onClick={handleBackupToFirebase}
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                  size="sm"
+                >
+                  <Cloud className="w-4 h-4" />
+                  Backup
                 </Button>
               )}
               <Dialog>
