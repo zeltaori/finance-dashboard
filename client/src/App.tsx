@@ -33,7 +33,11 @@ import './App.css';
 // Tema Context
 const ThemeContext = createContext<{ isDark: boolean; toggleTheme: () => void }>({ isDark: true, toggleTheme: () => {} });
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+// Cores para tema claro
+const COLORS_LIGHT = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+// Cores para tema escuro (mais claras)
+const COLORS_DARK = ['#4ade80', '#60a5fa', '#fbbf24', '#f87171', '#c084fc', '#f472b6', '#22d3ee', '#bfdbfe'];
+const COLORS = COLORS_LIGHT;
 
 function App() {
   const [isDark, setIsDark] = useState(true);
@@ -260,6 +264,9 @@ function App() {
   const textColorBody = isDark ? '#cbd5e1' : '#334155';
   const textColorLabel = isDark ? '#94a3b8' : '#64748b';
   const textColorSecondary = isDark ? '#64748b' : '#94a3b8';
+  
+  // Cores para gráficos por tema
+  const chartColors = isDark ? COLORS_DARK : COLORS_LIGHT;
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
@@ -669,9 +676,9 @@ function App() {
                           color: isDark ? '#f1f5f9' : '#111827'
                         }}
                       />
-                      <Bar dataKey="receitas" fill="#10b981" />
-                      <Bar dataKey="despesas" fill="#ef4444" />
-                      <Bar dataKey="sobra" fill="#3b82f6" />
+                      <Bar dataKey="receitas" fill={isDark ? '#4ade80' : '#10b981'} />
+                      <Bar dataKey="despesas" fill={isDark ? '#f87171' : '#ef4444'} />
+                      <Bar dataKey="sobra" fill={isDark ? '#60a5fa' : '#3b82f6'} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -703,7 +710,7 @@ function App() {
                           dataKey="value"
                         >
                           {mesData.receitas.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                           ))}
                         </Pie>
                         <RechartsTooltip
@@ -745,7 +752,7 @@ function App() {
                           {mesData.despesas
                             .filter(d => !d.isOutras && d.valor !== 0)
                             .map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                             ))}
                         </Pie>
                         <RechartsTooltip
