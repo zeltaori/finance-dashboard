@@ -966,10 +966,10 @@ function DespesaEditForm({
             Total: {formatCurrency(despesa.gastei)}
           </div>
           {despesa.historico_gastos && despesa.historico_gastos.length > 0 && (
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1 max-h-40 overflow-y-auto border border-slate-600 rounded-md p-2">
               {despesa.historico_gastos.map((valor, idx) => (
-                <div key={idx} className="flex items-center justify-between text-sm bg-slate-700 p-2 rounded">
-                  <span>{formatCurrency(valor)}</span>
+                <div key={idx} className="flex items-center justify-between text-sm p-2 rounded hover:bg-slate-600 transition-colors">
+                  <span style={{ color: '#cbd5e1' }}>{formatCurrency(valor)}</span>
                   <Button
                     type="button"
                     size="sm"
