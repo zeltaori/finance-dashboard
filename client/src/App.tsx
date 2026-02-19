@@ -445,12 +445,12 @@ function App() {
       <div className={`min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`} style={{ color: isDark ? '#cbd5e1' : '#334155' }}>
         {/* Header */}
         <header className={`${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50 shadow-sm`}>
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-8 h-8 text-blue-400" />
-              <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH1 }}>Gestão Financeira</h1>
+          <div className="max-w-7xl mx-auto px-4 py-3 md:py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Wallet className="w-6 md:w-8 h-6 md:h-8 text-blue-400" />
+              <h1 className="text-xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH1 }}>Gestão Financeira</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 md:gap-4 flex-wrap justify-end">
               <Button
                 variant="ghost"
                 size="icon"
@@ -549,12 +549,12 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 py-8">
+        <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-8">
           {/* Seleção de Mês */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
-              <div className="flex gap-2">
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
+              <div className="flex gap-1 md:gap-2 w-full md:w-auto">
                 <Dialog open={showNovoMesDialog} onOpenChange={setShowNovoMesDialog}>
                   <Button
                     onClick={() => setShowNovoMesDialog(true)}
@@ -732,46 +732,46 @@ function App() {
           </div>
 
           {/* Resumo do Mês */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Receitas</CardTitle>
+              <CardHeader className="pb-2 md:pb-3">
+                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Total de Receitas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-lg md:text-2xl font-bold text-green-500">
                   {formatCurrency(mesData.total_receitas)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Despesas</CardTitle>
+              <CardHeader className="pb-2 md:pb-3">
+                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Total de Despesas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-500">
+                <div className="text-lg md:text-2xl font-bold text-red-500">
                   {formatCurrency(mesData.total_despesas)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Sobra</CardTitle>
+              <CardHeader className="pb-2 md:pb-3">
+                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Sobra</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                <div className={`text-lg md:text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {formatCurrency(sobra)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Saldo VR</CardTitle>
+              <CardHeader className="pb-2 md:pb-3">
+                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Saldo VR</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-500">
+                <div className="text-lg md:text-2xl font-bold text-blue-500">
                   {formatCurrency(saldoVR)}
                 </div>
               </CardContent>
