@@ -530,7 +530,7 @@ function App() {
                       >
                         <div className="flex-1">
                           <div className="font-semibold text-base" style={{ color: textColorBody }}>{receita.descricao}</div>
-                          <Badge variant="outline" className="text-xs mt-1 font-medium">
+                          <Badge variant="outline" className="text-xs mt-1 font-medium" style={{ color: isDark ? '#f1f5f9' : '#334155' }}>
                             {receita.categoria}
                           </Badge>
                         </div>
@@ -605,7 +605,7 @@ function App() {
                       >
                         <div className="flex-1">
                           <div className="font-semibold text-base" style={{ color: textColorBody }}>{despesa.descricao}</div>
-                          <Badge variant="outline" className="text-xs mt-1 font-medium">
+                          <Badge variant="outline" className="text-xs mt-1 font-medium" style={{ color: isDark ? '#f1f5f9' : '#334155' }}>
                             {despesa.categoria}
                           </Badge>
                         </div>
