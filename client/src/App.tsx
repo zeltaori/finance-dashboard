@@ -28,6 +28,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import { meses as initialMeses, formatCurrency, type Receita, type Despesa, type MesData, bancoDados } from './data/dadosFinanceiros';
+import { nanoid } from 'nanoid';
 import './App.css';
 
 // Tema Context
@@ -327,6 +328,24 @@ function App() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
               <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    const ultimoMes = meses[meses.length - 1];
+                    const novoMes: MesData = {
+                      nome: 'Novo Mês',
+                      receitas: ultimoMes.receitas.map(r => ({ ...r, id: nanoid() })),
+                      despesas: ultimoMes.despesas.map(d => ({ ...d, id: nanoid(), historico_gastos: [] })),
+                      total_receitas: ultimoMes.total_receitas,
+                      total_despesas: ultimoMes.total_despesas,
+                      sobra: ultimoMes.sobra
+                    };
+                    setMeses([...meses, novoMes]);
+                    setMesSelecionado(meses.length);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  + Novo Mês
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"
