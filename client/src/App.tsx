@@ -426,9 +426,13 @@ function App() {
                   <DialogHeader>
                     <DialogTitle>Exportar Dados</DialogTitle>
                   </DialogHeader>
-                  <Button onClick={handleDownloadJSON} className="w-full">
-                    Baixar como JSON
-                  </Button>
+                  <div className="space-y-4">
+                    <p style={{ color: isDark ? '#cbd5e1' : '#64748b' }}>Baixe todos os seus dados financeiros em formato JSON para backup local:</p>
+                    <Button onClick={handleDownloadJSON} className="w-full bg-blue-600 hover:bg-blue-700">
+                      <Download className="w-4 h-4 mr-2" />
+                      Baixar como JSON
+                    </Button>
+                  </div>
                 </DialogContent>
               </Dialog>
               <Dialog>
@@ -442,12 +446,20 @@ function App() {
                   <DialogHeader>
                     <DialogTitle>Importar Dados</DialogTitle>
                   </DialogHeader>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleUploadJSON}
-                    className="w-full"
-                  />
+                  <div className="space-y-4">
+                    <p style={{ color: isDark ? '#cbd5e1' : '#64748b' }}>Selecione um arquivo JSON para restaurar seus dados:</p>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={handleUploadJSON}
+                      className="w-full p-2 rounded border"
+                      style={{
+                        backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
+                        borderColor: isDark ? '#475569' : '#cbd5e1',
+                        color: isDark ? '#e2e8f0' : '#1e293b'
+                      }}
+                    />
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
