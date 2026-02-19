@@ -60,9 +60,17 @@ function App() {
     return new Date(hoje.getFullYear(), hoje.getMonth(), ultimoDia);
   });
   const [copiarDados, setCopiarDados] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
+
+  // Rastrear mudanças de tamanho da janela
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Salvar no localStorage apenas se usuario estiver logado
   useEffect(() => {
@@ -1026,7 +1034,7 @@ function App() {
                   <CardTitle className="text-lg md:text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-x-auto">
-                  <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 300 : 400}>
+                  <ResponsiveContainer width="100%" height={windowWidth < 640 ? 300 : 400}>
                     <BarChart
                       data={meses.map(m => {
                         let mesRef = '01/26';
