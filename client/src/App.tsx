@@ -870,9 +870,9 @@ function App() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 md:mb-8">
-            <TabsList className={`grid w-full grid-cols-2 gap-2 p-1 ${isDark ? 'bg-slate-800' : ''}`}>
-              <TabsTrigger value="mes" className="text-xs md:text-sm py-2 md:py-3">Mês Atual</TabsTrigger>
-              <TabsTrigger value="comparativo" className="text-xs md:text-sm py-2 md:py-3">Comparativo</TabsTrigger>
+            <TabsList className={`grid w-full grid-cols-2 gap-1 md:gap-2 p-1 ${isDark ? 'bg-slate-800' : ''}`}>
+              <TabsTrigger value="mes" className="text-xs md:text-sm py-2 md:py-3 px-2 md:px-4 whitespace-nowrap">Mês Atual</TabsTrigger>
+              <TabsTrigger value="comparativo" className="text-xs md:text-sm py-2 md:py-3 px-2 md:px-4 whitespace-nowrap">Comparativo</TabsTrigger>
             </TabsList>
 
             {/* Tab: Mês Atual */}
@@ -1032,51 +1032,69 @@ function App() {
             </TabsContent>
 
             {/* Tab: Comparativo */}
-            <TabsContent value="comparativo">
+            <TabsContent value="comparativo" className="w-full">
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
                   <CardTitle className="text-lg md:text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <ResponsiveContainer width="100%" height={windowWidth < 640 ? 300 : 400}>
-                    <BarChart
-                      data={meses.map(m => {
-                        let mesRef = '01/26';
-                        if (m.dataFinal) {
-                          const [ano, mes] = m.dataFinal.split('-');
-                          mesRef = `${mes}/${ano.slice(-2)}`;
-                        } else {
-                          const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
-                          const mesAno = m.nome.split(' ');
-                          const mesNum = mesesMap[mesAno[0]] || '01';
-                          const ano = mesAno[1].slice(-2);
-                          mesRef = `${mesNum}/${ano}`;
-                        }
-                        return {
-                          nome: mesRef,
-                          receitas: m.total_receitas,
-                          despesas: m.total_despesas,
-                          sobra: m.sobra
-                        };
-                      })
-                    }
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
-                      <XAxis dataKey="nome" stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
-                      <YAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
-                      <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155' }} />
-                      <RechartsTooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? '#0f172a' : '#f9fafb',
-                          border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
-                          color: isDark ? '#f1f5f9' : '#111827'
-                        }}
-                      />
-                      <Bar dataKey="receitas" fill={isDark ? '#4ade80' : '#10b981'} />
-                      <Bar dataKey="despesas" fill={isDark ? '#f87171' : '#ef4444'} />
-                      <Bar dataKey="sobra" fill={isDark ? '#60a5fa' : '#3b82f6'} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <CardContent className="w-full overflow-x-auto p-2 md:p-4">
+                  <div style={{ width: '100%', height: windowWidth < 640 ? '280px' : '400px' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={meses.map(m => {
+                          let mesRef = '01/26';
+                          if (m.dataFinal) {
+                            const [ano, mes] = m.dataFinal.split('-');
+                            mesRef = `${mes}/${ano.slice(-2)}`;
+                          } else {
+                            const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
+                            const mesAno = m.nome.split(' ');
+                            const mesNum = mesesMap[mesAno[0]] || '01';
+                            const ano = mesAno[1].slice(-2);
+                            mesRef = `${mesNum}/${ano}`;
+                          }
+                          return {
+                            nome: mesRef,
+                            receitas: m.total_receitas,
+                            despesas: m.total_despesas,
+                            sobra: m.sobra
+                          };
+                        })
+                      }
+                      margin={windowWidth < 640 ? { top: 5, right: 10, left: -20, bottom: 50 } : { top: 5, right: 30, left: 0, bottom: 80 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
+                        <XAxis 
+                          dataKey="nome" 
+                          stroke={isDark ? '#cbd5e1' : '#6b7280'} 
+                          angle={windowWidth < 640 ? -45 : -45} 
+                          textAnchor="end" 
+                          height={windowWidth < 640 ? 60 : 80}
+                          tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
+                        />
+                        <YAxis 
+                          stroke={isDark ? '#cbd5e1' : '#6b7280'}
+                          tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
+                        />
+                        <Legend 
+                          wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155', fontSize: windowWidth < 640 ? '11px' : '12px' }}
+                          verticalAlign={windowWidth < 640 ? 'bottom' : 'bottom'}
+                          height={windowWidth < 640 ? 20 : 30}
+                        />
+                        <RechartsTooltip
+                          contentStyle={{
+                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
+                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+                            color: isDark ? '#f1f5f9' : '#111827',
+                            fontSize: windowWidth < 640 ? '11px' : '12px'
+                          }}
+                        />
+                        <Bar dataKey="receitas" fill={isDark ? '#4ade80' : '#10b981'} />
+                        <Bar dataKey="despesas" fill={isDark ? '#f87171' : '#ef4444'} />
+                        <Bar dataKey="sobra" fill={isDark ? '#60a5fa' : '#3b82f6'} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
