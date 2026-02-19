@@ -603,7 +603,7 @@ function App() {
                   >
                     {mes.nome}
                   </button>
-                  {meses.length > 1 && (
+                  {meses.length > 1 && mesSelecionado === index && (
                     <Button
                       variant="ghost"
                       size="sm"
