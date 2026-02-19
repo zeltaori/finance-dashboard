@@ -726,10 +726,14 @@ function App() {
                           setMesSelecionado(Math.max(0, novosMeses.length - 1));
                         }
                       }}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 md:p-2"
+                      className={`p-1 md:p-2 ${
+                        isDark
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-950'
+                          : 'text-red-500 hover:text-red-700 hover:bg-red-100'
+                      }`}
                       title="Deletar mes"
                     >
-                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
+                      <Trash2 className="w-4 h-4 md:w-4 md:h-4" />
                     </Button>
                   )}
                 </div>
@@ -865,10 +869,10 @@ function App() {
           </Card>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 md:mb-8">
             <TabsList className={`grid w-full grid-cols-2 ${isDark ? 'bg-slate-800' : ''}`}>
-              <TabsTrigger value="mes">Mês Atual</TabsTrigger>
-              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
+              <TabsTrigger value="mes" className="text-xs md:text-sm">Mês Atual</TabsTrigger>
+              <TabsTrigger value="comparativo" className="text-xs md:text-sm">Comparativo</TabsTrigger>
             </TabsList>
 
             {/* Tab: Mês Atual */}
