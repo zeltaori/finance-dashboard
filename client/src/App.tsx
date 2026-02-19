@@ -658,14 +658,14 @@ function App() {
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
                       data={meses.map(m => ({
-                        nome: m.nome.split(' ')[0],
+                        nome: m.nome,
                         receitas: m.total_receitas,
                         despesas: m.total_despesas,
                         sobra: m.sobra
                       }))}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
-                      <XAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
+                      <XAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
                       <YAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
                       <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155' }} />
                       <RechartsTooltip
