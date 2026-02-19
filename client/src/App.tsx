@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -62,6 +63,9 @@ function App() {
   const [user, setUser] = useState<any>(null);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
+  const [showNovoMesDialog, setShowNovoMesDialog] = useState(false);
+  const [novoMesData, setNovoMesData] = useState<Date | undefined>(undefined);
+  const [copiarDados, setCopiarDados] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
@@ -545,26 +549,77 @@ function App() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
               <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    const ultimoMes = meses[meses.length - 1];
-                    const novoMes: MesData = {
-                      nome: 'Novo Mês',
-                      receitas: ultimoMes.receitas.map(r => ({ ...r, id: nanoid() })),
-                      despesas: ultimoMes.despesas.map(d => ({ ...d, id: nanoid(), historico_gastos: [] })),
-                      total_receitas: ultimoMes.total_receitas,
-                      total_despesas: ultimoMes.total_despesas,
-                      sobra: ultimoMes.sobra,
-                      dataFinal: ultimoMes.dataFinal,
-                      finsDeSemana: ultimoMes.finsDeSemana
-                    };
-                    setMeses([...meses, novoMes]);
-                    setMesSelecionado(meses.length);
-                  }}
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  + Novo Mês
-                </Button>
+                <Dialog open={showNovoMesDialog} onOpenChange={setShowNovoMesDialog}>
+                  <Button
+                    onClick={() => setShowNovoMesDialog(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    + Novo Mês
+                  </Button>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Adicionar Novo Mês</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label className="mb-2 block">Selecione o mês:</Label>
+                        <CalendarComponent
+                          mode="single"
+                          selected={novoMesData}
+                          onSelect={setNovoMesData}
+                          className="rounded-md border"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="copiarDados"
+                          checked={copiarDados}
+                          onChange={(e) => setCopiarDados(e.target.checked)}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor="copiarDados" className="cursor-pointer">
+                          Copiar receitas e despesas do mês anterior
+                        </Label>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          if (!novoMesData) {
+                            alert('Selecione uma data');
+                            return;
+                          }
+                          const ultimoMes = meses[meses.length - 1];
+                          const nomeMes = novoMesData.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+                          let receitas: Receita[] = [];
+                          let despesas: Despesa[] = [];
+                          if (copiarDados) {
+                            receitas = ultimoMes.receitas.map(r => ({ ...r, id: nanoid() }));
+                            despesas = ultimoMes.despesas.filter(d => d.descricao !== 'Outras').map(d => ({ ...d, id: nanoid(), historico_gastos: [] }));
+
+                          }
+                          const novoMes: MesData = {
+                            nome: nomeMes,
+                            receitas,
+                            despesas,
+                            total_receitas: 0,
+                            total_despesas: 0,
+                            sobra: 0,
+                            dataFinal: novoMesData.toISOString().split('T')[0],
+                            finsDeSemana: ultimoMes.finsDeSemana
+                          };
+                          setMeses([...meses, novoMes]);
+                          setMesSelecionado(meses.length);
+                          setShowNovoMesDialog(false);
+                          setNovoMesData(undefined);
+                          setCopiarDados(true);
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Criar Mês
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   variant="outline"
                   size="icon"
