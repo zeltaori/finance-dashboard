@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, createContext } from 'react';
 import { 
   Wallet, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, 
-  Check, X, TrendingUp, TrendingDown, Calendar, DollarSign, Sun, Moon, Download, Upload
+  Check, X, TrendingUp, TrendingDown, Calendar, DollarSign, Sun, Moon, Download, Upload, Cloud, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ import {
 } from 'recharts';
 import { meses as initialMeses, formatCurrency, type Receita, type Despesa, type MesData, bancoDados } from './data/dadosFinanceiros';
 import { nanoid } from 'nanoid';
+import { firebaseService, type BackupFile } from './services/firebaseService';
 import './App.css';
 
 // Tema Context
@@ -53,6 +54,9 @@ function App() {
   const [dataHoje, setDataHoje] = useState(new Date().toISOString().split('T')[0]);
   const [dataFinal, setDataFinal] = useState('2026-02-28');
   const [finsDeSemanaEditavel, setFinsDeSemanaEditavel] = useState(4);
+  const [user, setUser] = useState<any>(null);
+  const [backups, setBackups] = useState<BackupFile[]>([]);
+  const [showBackupDialog, setShowBackupDialog] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
@@ -71,6 +75,80 @@ function App() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [meses]);
+
+  // Monitorar autenticação Firebase
+  useEffect(() => {
+    const unsubscribe = firebaseService.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        loadBackups();
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // Fazer backup automático quando dados mudam (a cada 30 segundos)
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        await firebaseService.backup({ meses, timestamp: new Date().toISOString() });
+      } catch (error) {
+        console.error('Erro ao fazer backup automático:', error);
+      }
+    }, 30000); // 30 segundos
+
+    return () => clearInterval(interval);
+  }, [user, meses]);
+
+  const loadBackups = async () => {
+    try {
+      const backupsList = await firebaseService.listBackups();
+      setBackups(backupsList);
+    } catch (error) {
+      console.error('Erro ao carregar backups:', error);
+    }
+  };
+
+  const handleLoginGoogle = async () => {
+    try {
+      await firebaseService.loginWithGoogle();
+    } catch (error) {
+      console.error('Erro ao fazer login:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await firebaseService.logout();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const handleRestoreBackup = async (backupId: string) => {
+    try {
+      const restoredData = await firebaseService.restoreBackup(backupId);
+      if (restoredData && (restoredData as any).meses) {
+        setMeses((restoredData as any).meses);
+        alert('Backup restaurado com sucesso!');
+        setShowBackupDialog(false);
+      }
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error);
+      alert('Erro ao restaurar backup');
+    }
+  };
+
+  const handleDeleteBackup = async (backupId: string) => {
+    try {
+      await firebaseService.deleteBackup(backupId);
+      await loadBackups();
+    } catch (error) {
+      console.error('Erro ao deletar backup:', error);
+    }
+  };
 
   const toggleTheme = () => setIsDark(!isDark);
 
