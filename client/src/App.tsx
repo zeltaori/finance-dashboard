@@ -554,7 +554,9 @@ function App() {
                       despesas: ultimoMes.despesas.map(d => ({ ...d, id: nanoid(), historico_gastos: [] })),
                       total_receitas: ultimoMes.total_receitas,
                       total_despesas: ultimoMes.total_despesas,
-                      sobra: ultimoMes.sobra
+                      sobra: ultimoMes.sobra,
+                      dataFinal: ultimoMes.dataFinal,
+                      finsDeSemana: ultimoMes.finsDeSemana
                     };
                     setMeses([...meses, novoMes]);
                     setMesSelecionado(meses.length);
@@ -585,19 +587,39 @@ function App() {
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <button
+                <div
                   key={index}
-                  onClick={() => setMesSelecionado(index)}
-                  className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
-                    mesSelecionado === index
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : isDark
-                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-100'
-                      : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                  }`}
+                  className="flex items-center gap-1"
                 >
-                  {mes.nome}
-                </button>
+                  <button
+                    onClick={() => setMesSelecionado(index)}
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
+                      mesSelecionado === index
+                        ? 'bg-blue-500 text-white shadow-lg'
+                        : isDark
+                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-100'
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                    }`}
+                  >
+                    {mes.nome}
+                  </button>
+                  {meses.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const novosMeses = meses.filter((_, i) => i !== index);
+                        setMeses(novosMeses);
+                        if (mesSelecionado >= novosMeses.length) {
+                          setMesSelecionado(Math.max(0, novosMeses.length - 1));
+                        }
+                      }}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
           </div>
