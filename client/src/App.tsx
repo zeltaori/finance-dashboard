@@ -96,12 +96,12 @@ function App() {
       if (currentUser) {
         console.log("Usuario autenticado:", currentUser.uid);
         loadBackups();
-        // Aumentar delay para garantir que o Firebase esteja pronto
-        setTimeout(async () => {
-          console.log("Chamando loadUserData com delay de 1 segundo...");
-          await loadUserData();
-          console.log("loadUserData concluído!");
-        }, 1000);
+        // Carregar dados do usuário imediatamente
+        loadUserData();
+      } else {
+        // Usuário fez logout - voltar para base simplificada
+        console.log("Usuário desconectado");
+        setMeses(initialMeses);
       }
     });
     return unsubscribe;
@@ -149,17 +149,22 @@ function App() {
         console.log('Último backup:', latestBackup);
         const userData = latestBackup.data as any;
         console.log('Dados do usuário:', userData);
-        if (userData && userData.meses) {
+        if (userData && userData.meses && userData.meses.length > 0) {
           console.log('Carregando meses do Firebase:', userData.meses.length);
           setMeses(userData.meses);
+          setMesSelecionado(0);
         } else {
-          console.log('Nenhum dado de meses encontrado no backup');
+          console.log('Nenhum dado de meses encontrado no backup, usando base simplificada');
+          setMeses(initialMeses);
         }
       } else {
-        console.log('Nenhum backup encontrado para este usuário');
+        console.log('Nenhum backup encontrado para este usuário, usando base simplificada');
+        setMeses(initialMeses);
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
+      // Em caso de erro, usar base simplificada
+      setMeses(initialMeses);
     }
   };
 
