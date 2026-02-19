@@ -42,17 +42,11 @@ const COLORS = COLORS_LIGHT;
 function App() {
   const [isDark, setIsDark] = useState(true);
   const [meses, setMeses] = useState<MesData[]>(() => {
-    const saved = localStorage.getItem('gestaoFinanceira_dados');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return initialMeses;
-      }
-    }
+    // Limpar dados antigos do localStorage para usar os novos dados
+    localStorage.removeItem('gestaoFinanceira_dados');
     return initialMeses;
   });
-  const [mesSelecionado, setMesSelecionado] = useState<number>(13);
+  const [mesSelecionado, setMesSelecionado] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('mes');
   const [dinheiroEspecie, setDinheiroEspecie] = useState(0);
   const [dataHoje, setDataHoje] = useState(new Date().toISOString().split('T')[0]);
