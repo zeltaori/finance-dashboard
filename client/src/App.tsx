@@ -698,14 +698,14 @@ function App() {
             </div>
             <div
               ref={scrollRef}
-              className="flex gap-3 overflow-x-auto pb-4 scroll-smooth"
+              className="flex gap-2 md:gap-3 overflow-x-auto pb-3 md:pb-4 scroll-smooth"
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <div key={index} className="flex flex-col items-center gap-1 md:flex-row md:gap-2">
+                <div key={index} className="flex flex-col md:flex-row items-center gap-1 md:gap-2 flex-shrink-0">
                   <button
                     onClick={() => setMesSelecionado(index)}
-                    className={`px-2 md:px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors text-sm md:text-base ${
+                    className={`px-3 md:px-4 py-2 rounded-lg font-semibold transition-colors text-xs md:text-base min-w-max ${
                       mesSelecionado === index
                         ? 'bg-blue-500 text-white shadow-lg'
                         : isDark
@@ -726,7 +726,7 @@ function App() {
                           setMesSelecionado(Math.max(0, novosMeses.length - 1));
                         }
                       }}
-                      className={`p-2 md:p-1 ${
+                      className={`p-2 md:p-1 flex-shrink-0 ${
                         isDark
                           ? 'text-red-400 hover:text-red-300 hover:bg-red-950'
                           : 'text-red-500 hover:text-red-700 hover:bg-red-100'
