@@ -35,12 +35,6 @@ const ThemeContext = createContext<{ isDark: boolean; toggleTheme: () => void }>
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
-// Google Drive API Config
-const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID'; // Substituir pelo Client ID real
-const GOOGLE_API_KEY = 'SUA_API_KEY'; // Substituir pela API Key real
-const GOOGLE_DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
-const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
-
 function App() {
   const [isDark, setIsDark] = useState(true);
   const [meses, setMeses] = useState<MesData[]>(() => {
@@ -60,7 +54,6 @@ function App() {
   const [dataHoje, setDataHoje] = useState(new Date().toISOString().split('T')[0]);
   const [dataFinal, setDataFinal] = useState('2026-02-28');
   const [finsDeSemanaEditavel, setFinsDeSemanaEditavel] = useState(4);
-  const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
@@ -79,12 +72,6 @@ function App() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [meses]);
-
-  // Inicializar Google API (desabilitado por padrão)
-  useEffect(() => {
-    // Google API initialization removed for static deployment
-    // Uncomment and configure if using a backend with Google Drive integration
-  }, []);
 
   const toggleTheme = () => setIsDark(!isDark);
 
@@ -267,15 +254,22 @@ function App() {
     }
   };
 
+  // Cores de texto por tema
+  const textColorH1 = isDark ? '#f8fafc' : '#0f172a';
+  const textColorH2 = isDark ? '#e2e8f0' : '#1e293b';
+  const textColorBody = isDark ? '#cbd5e1' : '#334155';
+  const textColorLabel = isDark ? '#94a3b8' : '#64748b';
+  const textColorSecondary = isDark ? '#64748b' : '#94a3b8';
+
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      <div className={`min-h-screen ${isDark ? 'bg-slate-950 text-slate-50' : 'bg-gray-50 text-gray-900'}`}>
+      <div className={`min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`} style={{ color: isDark ? '#cbd5e1' : '#334155' }}>
         {/* Header */}
         <header className={`${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50 shadow-sm`}>
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Wallet className="w-8 h-8 text-blue-400" />
-              <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Gestão Financeira</h1>
+              <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH1 }}>Gestão Financeira</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button
@@ -330,7 +324,7 @@ function App() {
           {/* Seleção de Mês */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Selecione o Mês</h2>
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -375,7 +369,7 @@ function App() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total de Receitas</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Receitas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-500">
@@ -386,7 +380,7 @@ function App() {
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total de Despesas</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Despesas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-500">
@@ -397,7 +391,7 @@ function App() {
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Sobra</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Sobra</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className={`text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -408,7 +402,7 @@ function App() {
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Saldo VR</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Saldo VR</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-500">
@@ -421,12 +415,12 @@ function App() {
           {/* Configurações */}
           <Card className={`mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : ''}`}>
             <CardHeader>
-              <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Configurações</CardTitle>
+              <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Configurações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <Label className="text-sm font-semibold">Dinheiro em Espécie (R$)</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Dinheiro em Espécie (R$)</Label>
                   <Input
                     type="number"
                     value={dinheiroEspecie}
@@ -435,7 +429,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Data Hoje</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Data Hoje</Label>
                   <Input
                     type="date"
                     value={dataHoje}
@@ -444,7 +438,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Data Final do Mês</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Data Final do Mês</Label>
                   <Input
                     type="date"
                     value={dataFinal}
@@ -453,7 +447,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold">Fins de Semana</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Fins de Semana</Label>
                   <Input
                     type="number"
                     value={finsDeSemanaEditavel}
@@ -465,19 +459,19 @@ function App() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                 <div>
-                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total Livre</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Total Livre</Label>
                   <div className="text-xl font-bold text-blue-400 mt-1">{formatCurrency(totalLivre)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Por Fim de Semana</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Por Fim de Semana</Label>
                   <div className="text-xl font-bold text-emerald-400 mt-1">{formatCurrency(livreFDS)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Dias Restantes</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Dias Restantes</Label>
                   <div className="text-xl font-bold text-purple-400 mt-1">{diasRestantes}</div>
                 </div>
                 <div>
-                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Média Diária</Label>
+                  <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Média Diária</Label>
                   <div className="text-xl font-bold text-orange-400 mt-1">{formatCurrency(mediaDiaria)}</div>
                 </div>
               </div>
@@ -498,7 +492,7 @@ function App() {
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>
                       <TrendingUp className="w-5 h-5 text-green-400" />
                       Receitas
                     </CardTitle>
@@ -528,8 +522,8 @@ function App() {
                         } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-semibold text-base">{receita.descricao}</div>
-                          <Badge variant="outline" className="text-xs mt-1">
+                          <div className="font-semibold text-base" style={{ color: textColorBody }}>{receita.descricao}</div>
+                          <Badge variant="outline" className="text-xs mt-1 font-medium">
                             {receita.categoria}
                           </Badge>
                         </div>
@@ -573,7 +567,7 @@ function App() {
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>
                       <TrendingDown className="w-5 h-5 text-red-400" />
                       Despesas
                     </CardTitle>
@@ -603,7 +597,7 @@ function App() {
                         } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-semibold text-base">{despesa.descricao}</div>
+                          <div className="font-semibold text-base" style={{ color: textColorBody }}>{despesa.descricao}</div>
                           <Badge variant="outline" className="text-xs mt-1 font-medium">
                             {despesa.categoria}
                           </Badge>
@@ -612,7 +606,7 @@ function App() {
                           <div className="font-bold text-red-400 text-lg">
                             {formatCurrency(Math.abs(despesa.valor))}
                           </div>
-                          <div className="text-xs" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>
+                          <div className="text-xs" style={{ color: textColorSecondary }}>
                             Gastei: {formatCurrency(despesa.gastei)} | Falta: {formatCurrency(despesa.falta)}
                           </div>
                         </div>
@@ -652,7 +646,7 @@ function App() {
             <TabsContent value="comparativo">
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Comparativo de Meses</CardTitle>
+                  <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>
@@ -690,7 +684,7 @@ function App() {
                 {/* Gráfico de Receitas */}
                 <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
-                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Distribuição de Receitas</CardTitle>
+                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Distribuição de Receitas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -728,7 +722,7 @@ function App() {
                 {/* Gráfico de Despesas */}
                 <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
-                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Distribuição de Despesas</CardTitle>
+                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Distribuição de Despesas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
