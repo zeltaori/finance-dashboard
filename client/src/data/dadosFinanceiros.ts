@@ -84,11 +84,15 @@ export interface MesData {
   total_receitas: number;
   total_despesas: number;
   sobra: number;
+  dataFinal?: string; // Data final do mês (ex: 2026-02-28)
+  finsDeSemana?: number; // Número de fins de semana no mês
 }
 
 export const meses: MesData[] = [
   {
     nome: "Fevereiro 2026",
+    dataFinal: "2026-02-28",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1044.00 },
       { id: "r2", descricao: "PC", categoria: "PC", valor: 1032.73 },
@@ -120,6 +124,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Março 2026",
+    dataFinal: "2026-03-31",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 6175.80 },
       { id: "r2", descricao: "Saldo Anterior", categoria: "Saldo", valor: 82.72 },
@@ -146,6 +152,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Abril 2026",
+    dataFinal: "2026-04-30",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1017.83 },
       { id: "r2", descricao: "Saldo Anterior", categoria: "Saldo", valor: 254.60 },
@@ -172,6 +180,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Maio 2026",
+    dataFinal: "2026-05-31",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1353.00 },
       { id: "r2", descricao: "VT", categoria: "VT", valor: 0.00 },
@@ -199,6 +209,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Junho 2026",
+    dataFinal: "2026-06-30",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1270.40 },
       { id: "r2", descricao: "VT", categoria: "VT", valor: 259.60 },
@@ -225,6 +237,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Julho 2026",
+    dataFinal: "2026-07-31",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1516.00 },
       { id: "r2", descricao: "VT", categoria: "VT", valor: 0.00 },
@@ -251,6 +265,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Agosto 2026",
+    dataFinal: "2026-08-31",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1490.98 },
       { id: "r2", descricao: "VT", categoria: "VT", valor: 506.10 },
@@ -277,6 +293,8 @@ export const meses: MesData[] = [
   },
   {
     nome: "Setembro 2026",
+    dataFinal: "2026-09-30",
+    finsDeSemana: 4,
     receitas: [
       { id: "r1", descricao: "Salário", categoria: "Salário", valor: 1724.00 },
       { id: "r2", descricao: "Saldo Anterior", categoria: "Saldo", valor: 2339.90 },

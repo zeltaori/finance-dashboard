@@ -11,6 +11,8 @@ import {
   getFirestore, 
   collection, 
   addDoc, 
+  setDoc,
+  updateDoc,
   query, 
   where, 
   orderBy, 
@@ -86,15 +88,40 @@ export const firebaseService = {
     try {
       const backupName = name || `Backup ${new Date().toLocaleString('pt-BR')}`;
       
-      const docRef = await addDoc(collection(db, 'users', user.uid, 'backups'), {
+      // Usar um ID fixo para manter apenas um backup atualizado
+      const backupId = 'latest-backup';
+      
+      const backupData = {
         name: backupName,
         data: data,
-        createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         userId: user.uid
-      });
+      };
+      
+      console.log('Backup data being saved:', backupData);
+      
+      try {
+        // Tentar atualizar o documento existente
+        console.log('Tentando atualizar documento:', backupId);
+        await updateDoc(doc(db, 'users', user.uid, 'backups', backupId), backupData);
+        console.log('Documento atualizado com sucesso!');
+      } catch (updateError: any) {
+        console.log('Erro ao atualizar:', updateError.code, updateError.message);
+        // Se o documento não existir, criar um novo
+        if (updateError.code === 'not-found') {
+          console.log('Documento não encontrado, criando novo...');
+          await setDoc(doc(db, 'users', user.uid, 'backups', backupId), {
+            ...backupData,
+            createdAt: Timestamp.now()
+          });
+          console.log('Novo documento criado!');
+        } else {
+          throw updateError;
+        }
+      }
 
-      return docRef.id;
+      console.log('Backup saved successfully to:', `users/${user.uid}/backups/${backupId}`);
+      return backupId;
     } catch (error) {
       console.error('Erro ao fazer backup:', error);
       throw error;

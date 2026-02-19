@@ -59,8 +59,6 @@ function App() {
   const [activeTab, setActiveTab] = useState('mes');
   const [dinheiroEspecie, setDinheiroEspecie] = useState(0);
   const [dataHoje, setDataHoje] = useState(new Date().toISOString().split('T')[0]);
-  const [dataFinal, setDataFinal] = useState('2026-02-28');
-  const [finsDeSemanaEditavel, setFinsDeSemanaEditavel] = useState(4);
   const [user, setUser] = useState<any>(null);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
@@ -265,7 +263,8 @@ function App() {
   // Calcular dias restantes
   const calcularDiasRestantes = () => {
     const hoje = new Date(dataHoje);
-    const final = new Date(dataFinal);
+    const dataFinalMes = mesData?.dataFinal || '2026-02-28';
+    const final = new Date(dataFinalMes);
     const diffTime = final.getTime() - hoje.getTime();
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
@@ -274,7 +273,8 @@ function App() {
   const sobra = calcularSobra();
   const saldoVR = calcularSaldoVR();
   const totalLivre = sobra + dinheiroEspecie;
-  const livreFDS = finsDeSemanaEditavel > 0 ? totalLivre / finsDeSemanaEditavel : 0;
+  const finsDeSemana = mesData?.finsDeSemana || 4;
+  const livreFDS = finsDeSemana > 0 ? totalLivre / finsDeSemana : 0;
   const mediaDiaria = diasRestantes > 0 ? totalLivre / diasRestantes : 0;
 
   const scrollMeses = (direction: 'left' | 'right') => {
@@ -678,8 +678,15 @@ function App() {
                   <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Data Final do Mês</Label>
                   <Input
                     type="date"
-                    value={dataFinal}
-                    onChange={(e) => setDataFinal(e.target.value)}
+                    value={mesData?.dataFinal || '2026-02-28'}
+                    onChange={(e) => {
+                      const novosMeses = [...meses];
+                      novosMeses[mesSelecionado] = {
+                        ...novosMeses[mesSelecionado],
+                        dataFinal: e.target.value
+                      };
+                      setMeses(novosMeses);
+                    }}
                     className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
@@ -687,8 +694,15 @@ function App() {
                   <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Fins de Semana</Label>
                   <Input
                     type="number"
-                    value={finsDeSemanaEditavel}
-                    onChange={(e) => setFinsDeSemanaEditavel(parseInt(e.target.value) || 0)}
+                    value={mesData?.finsDeSemana || 4}
+                    onChange={(e) => {
+                      const novosMeses = [...meses];
+                      novosMeses[mesSelecionado] = {
+                        ...novosMeses[mesSelecionado],
+                        finsDeSemana: parseInt(e.target.value) || 0
+                      };
+                      setMeses(novosMeses);
+                    }}
                     className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
