@@ -64,7 +64,11 @@ function App() {
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
   const [showNovoMesDialog, setShowNovoMesDialog] = useState(false);
-  const [novoMesData, setNovoMesData] = useState<Date | undefined>(undefined);
+  const [novoMesData, setNovoMesData] = useState<Date | undefined>(() => {
+    const hoje = new Date();
+    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+    return new Date(hoje.getFullYear(), hoje.getMonth(), ultimoDia);
+  });
   const [copiarDados, setCopiarDados] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -634,19 +638,22 @@ function App() {
                             receitas = ultimoMes.receitas.map(r => ({ ...r, id: nanoid() }));
                             despesas = ultimoMes.despesas.map(d => {
                               if (d.descricao === 'Outras') {
-                                return { ...d, id: nanoid(), gastei: 0, historico_gastos: [] };
+                                return { ...d, id: nanoid(), valor: 0, gastei: 0, historico_gastos: [] };
                               }
                               return { ...d, id: nanoid(), historico_gastos: [] };
                             });
 
                           }
+                          const total_receitas = receitas.reduce((sum, r) => sum + r.valor, 0);
+                          const total_despesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+                          const sobra = total_receitas - total_despesas;
                           const novoMes: MesData = {
                             nome: nomeMes,
                             receitas,
                             despesas,
-                            total_receitas: 0,
-                            total_despesas: 0,
-                            sobra: 0,
+                            total_receitas,
+                            total_despesas,
+                            sobra,
                             dataFinal: novoMesData.toISOString().split('T')[0],
                             finsDeSemana: ultimoMes.finsDeSemana
                           };
