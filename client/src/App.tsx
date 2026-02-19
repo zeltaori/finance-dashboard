@@ -44,8 +44,18 @@ const COLORS = COLORS_LIGHT;
 
 function App() {
   const [isDark, setIsDark] = useState(true);
-  const [meses, setMeses] = useState<MesData[]>(initialMeses);
-  const [isLoadingFromFirebase, setIsLoadingFromFirebase] = useState(false);
+  const [meses, setMeses] = useState<MesData[]>(() => {
+    // Tentar carregar do localStorage como fallback
+    try {
+      const saved = localStorage.getItem('gestaoFinanceira_dados');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do localStorage:', error);
+    }
+    return initialMeses;
+  });
   const [mesSelecionado, setMesSelecionado] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('mes');
   const [dinheiroEspecie, setDinheiroEspecie] = useState(0);
@@ -60,24 +70,14 @@ function App() {
     return new Date(hoje.getFullYear(), hoje.getMonth(), ultimoDia);
   });
   const [copiarDados, setCopiarDados] = useState(true);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
 
-  // Rastrear mudanças de tamanho da janela
+  // Salvar no localStorage
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Salvar no localStorage apenas se usuario estiver logado
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('gestaoFinanceira_dados', JSON.stringify(meses));
-    }
-  }, [meses, user]);
+    localStorage.setItem('gestaoFinanceira_dados', JSON.stringify(meses));
+  }, [meses]);
 
   // Backup automático ao fechar
   useEffect(() => {
@@ -95,20 +95,13 @@ function App() {
       setUser(currentUser);
       if (currentUser) {
         console.log("Usuario autenticado:", currentUser.uid);
-        setIsLoadingFromFirebase(true);
         loadBackups();
         // Aumentar delay para garantir que o Firebase esteja pronto
         setTimeout(async () => {
           console.log("Chamando loadUserData com delay de 1 segundo...");
           await loadUserData();
-          console.log("loadUserData concluido!");
-          setIsLoadingFromFirebase(false);
+          console.log("loadUserData concluído!");
         }, 1000);
-      } else {
-        // Usuario nao esta logado - usar base simplificada
-        console.log("Usuario nao autenticado, usando base simplificada");
-        setMeses(initialMeses);
-        setIsLoadingFromFirebase(false);
       }
     });
     return unsubscribe;
@@ -153,23 +146,20 @@ function App() {
       console.log('Backups carregados:', backupsList.length);
       if (backupsList.length > 0) {
         const latestBackup = backupsList[0];
-        console.log('Ultimo backup:', latestBackup);
+        console.log('Último backup:', latestBackup);
         const userData = latestBackup.data as any;
-        console.log('Dados do usuario:', userData);
-        if (userData && userData.meses && userData.meses.length > 0) {
+        console.log('Dados do usuário:', userData);
+        if (userData && userData.meses) {
           console.log('Carregando meses do Firebase:', userData.meses.length);
           setMeses(userData.meses);
         } else {
-          console.log('Nenhum dado de meses encontrado no backup, usando base simplificada');
-          setMeses(initialMeses);
+          console.log('Nenhum dado de meses encontrado no backup');
         }
       } else {
-        console.log('Nenhum backup encontrado para este usuario, usando base simplificada');
-        setMeses(initialMeses);
+        console.log('Nenhum backup encontrado para este usuário');
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do usuario:', error);
-      // Em caso de erro, manter base simplificada
+      console.error('Erro ao carregar dados do usuário:', error);
     }
   };
 
@@ -453,12 +443,12 @@ function App() {
       <div className={`min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`} style={{ color: isDark ? '#cbd5e1' : '#334155' }}>
         {/* Header */}
         <header className={`${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50 shadow-sm`}>
-          <div className="max-w-7xl mx-auto px-4 py-3 md:py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
-            <div className="flex items-center gap-2 md:gap-3">
-              <Wallet className="w-6 md:w-8 h-6 md:h-8 text-blue-400" />
-              <h1 className="text-xl md:text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH1 }}>Gestão Financeira</h1>
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Wallet className="w-8 h-8 text-blue-400" />
+              <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH1 }}>Gestão Financeira</h1>
             </div>
-            <div className="flex items-center gap-1 md:gap-4 flex-wrap justify-end">
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="icon"
@@ -557,12 +547,12 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-3 md:px-4 py-6 md:py-8">
+        <main className="max-w-7xl mx-auto px-4 py-8">
           {/* Seleção de Mês */}
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-2 md:gap-0">
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
-              <div className="flex gap-1 md:gap-2 w-full md:w-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
+              <div className="flex gap-2">
                 <Dialog open={showNovoMesDialog} onOpenChange={setShowNovoMesDialog}>
                   <Button
                     onClick={() => setShowNovoMesDialog(true)}
@@ -698,14 +688,17 @@ function App() {
             </div>
             <div
               ref={scrollRef}
-              className="flex gap-2 md:gap-3 overflow-x-auto pb-3 md:pb-4 scroll-smooth"
+              className="flex gap-3 overflow-x-auto pb-4 scroll-smooth"
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <div key={index} className="flex flex-col md:flex-row items-center gap-1 md:gap-2 flex-shrink-0">
+                <div
+                  key={index}
+                  className="flex items-center gap-1"
+                >
                   <button
                     onClick={() => setMesSelecionado(index)}
-                    className={`px-3 md:px-4 py-2 rounded-lg font-semibold transition-colors text-xs md:text-base min-w-max ${
+                    className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
                       mesSelecionado === index
                         ? 'bg-blue-500 text-white shadow-lg'
                         : isDark
@@ -726,14 +719,9 @@ function App() {
                           setMesSelecionado(Math.max(0, novosMeses.length - 1));
                         }
                       }}
-                      className={`p-2 md:p-1 flex-shrink-0 ${
-                        isDark
-                          ? 'text-red-400 hover:text-red-300 hover:bg-red-950'
-                          : 'text-red-500 hover:text-red-700 hover:bg-red-100'
-                      }`}
-                      title="Deletar mes"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
-                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
@@ -742,46 +730,46 @@ function App() {
           </div>
 
           {/* Resumo do Mês */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6 md:mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-2 md:pb-3">
-                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Total de Receitas</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Receitas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-lg md:text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold text-green-500">
                   {formatCurrency(mesData.total_receitas)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-2 md:pb-3">
-                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Total de Despesas</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Total de Despesas</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-lg md:text-2xl font-bold text-red-500">
+                <div className="text-2xl font-bold text-red-500">
                   {formatCurrency(mesData.total_despesas)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-2 md:pb-3">
-                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Sobra</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Sobra</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-lg md:text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                <div className={`text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {formatCurrency(sobra)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-              <CardHeader className="pb-2 md:pb-3">
-                <CardTitle className="text-xs md:text-sm font-semibold" style={{ color: textColorLabel }}>Saldo VR</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold" style={{ color: textColorLabel }}>Saldo VR</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-lg md:text-2xl font-bold text-blue-500">
+                <div className="text-2xl font-bold text-blue-500">
                   {formatCurrency(saldoVR)}
                 </div>
               </CardContent>
@@ -869,10 +857,10 @@ function App() {
           </Card>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 md:mb-8">
-            <TabsList className={`grid w-full grid-cols-2 gap-1 md:gap-2 p-1 ${isDark ? 'bg-slate-800' : ''}`}>
-              <TabsTrigger value="mes" className="text-xs md:text-sm py-2 md:py-3 px-2 md:px-4 whitespace-nowrap">Mês Atual</TabsTrigger>
-              <TabsTrigger value="comparativo" className="text-xs md:text-sm py-2 md:py-3 px-2 md:px-4 whitespace-nowrap">Comparativo</TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className={`grid w-full grid-cols-2 ${isDark ? 'bg-slate-800' : ''}`}>
+              <TabsTrigger value="mes">Mês Atual</TabsTrigger>
+              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
             </TabsList>
 
             {/* Tab: Mês Atual */}
@@ -1032,69 +1020,44 @@ function App() {
             </TabsContent>
 
             {/* Tab: Comparativo */}
-            <TabsContent value="comparativo" className="w-full">
+            <TabsContent value="comparativo">
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
-                  <CardTitle className="text-lg md:text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
+                  <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
-                <CardContent className="w-full overflow-x-auto p-2 md:p-4">
-                  <div style={{ width: '100%', height: windowWidth < 640 ? '280px' : '400px' }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={meses.map(m => {
-                          let mesRef = '01/26';
-                          if (m.dataFinal) {
-                            const [ano, mes] = m.dataFinal.split('-');
-                            mesRef = `${mes}/${ano.slice(-2)}`;
-                          } else {
-                            const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
-                            const mesAno = m.nome.split(' ');
-                            const mesNum = mesesMap[mesAno[0]] || '01';
-                            const ano = mesAno[1].slice(-2);
-                            mesRef = `${mesNum}/${ano}`;
-                          }
-                          return {
-                            nome: mesRef,
-                            receitas: m.total_receitas,
-                            despesas: m.total_despesas,
-                            sobra: m.sobra
-                          };
-                        })
-                      }
-                      margin={windowWidth < 640 ? { top: 5, right: 10, left: -20, bottom: 50 } : { top: 5, right: 30, left: 0, bottom: 80 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
-                        <XAxis 
-                          dataKey="nome" 
-                          stroke={isDark ? '#cbd5e1' : '#6b7280'} 
-                          angle={windowWidth < 640 ? -45 : -45} 
-                          textAnchor="end" 
-                          height={windowWidth < 640 ? 60 : 80}
-                          tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
-                        />
-                        <YAxis 
-                          stroke={isDark ? '#cbd5e1' : '#6b7280'}
-                          tick={{ fontSize: windowWidth < 640 ? 10 : 12 }}
-                        />
-                        <Legend 
-                          wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155', fontSize: windowWidth < 640 ? '11px' : '12px' }}
-                          verticalAlign={windowWidth < 640 ? 'bottom' : 'bottom'}
-                          height={windowWidth < 640 ? 20 : 30}
-                        />
-                        <RechartsTooltip
-                          contentStyle={{
-                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
-                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
-                            color: isDark ? '#f1f5f9' : '#111827',
-                            fontSize: windowWidth < 640 ? '11px' : '12px'
-                          }}
-                        />
-                        <Bar dataKey="receitas" fill={isDark ? '#4ade80' : '#10b981'} />
-                        <Bar dataKey="despesas" fill={isDark ? '#f87171' : '#ef4444'} />
-                        <Bar dataKey="sobra" fill={isDark ? '#60a5fa' : '#3b82f6'} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={meses.map(m => {
+                        const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
+                        const mesAno = m.nome.split(' ');
+                        const mesNum = mesesMap[mesAno[0]] || '01';
+                        const ano = mesAno[1].slice(-2);
+                        const mesRef = `${mesNum}/${ano}`;
+                        return {
+                          nome: mesRef,
+                          receitas: m.total_receitas,
+                          despesas: m.total_despesas,
+                          sobra: m.sobra
+                        };
+                      })}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
+                      <XAxis dataKey="nome" stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
+                      <YAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
+                      <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155' }} />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: isDark ? '#0f172a' : '#f9fafb',
+                          border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+                          color: isDark ? '#f1f5f9' : '#111827'
+                        }}
+                      />
+                      <Bar dataKey="receitas" fill={isDark ? '#4ade80' : '#10b981'} />
+                      <Bar dataKey="despesas" fill={isDark ? '#f87171' : '#ef4444'} />
+                      <Bar dataKey="sobra" fill={isDark ? '#60a5fa' : '#3b82f6'} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </TabsContent>
