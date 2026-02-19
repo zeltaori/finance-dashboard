@@ -937,12 +937,57 @@ function DespesaEditForm({
       </div>
       <div>
         <Label>Já Gastei (R$)</Label>
-        <Input
-          type="number"
-          value={despesa.gastei}
-          onChange={(e) => onSubmit('gastei', parseFloat(e.target.value))}
-          step="0.01"
-        />
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              placeholder="Adicione um valor"
+              id="novoGasto"
+              step="0.01"
+            />
+            <Button
+              type="button"
+              onClick={() => {
+                const input = document.getElementById('novoGasto') as HTMLInputElement;
+                if (input && input.value) {
+                  const valor = parseFloat(input.value);
+                  const novoHistorico = [...despesa.historico_gastos, valor];
+                  const novoGastei = novoHistorico.reduce((a, b) => a + b, 0);
+                  onSubmit('historico_gastos', novoHistorico);
+                  onSubmit('gastei', novoGastei);
+                  input.value = '';
+                }
+              }}
+            >
+              Adicionar
+            </Button>
+          </div>
+          <div className="text-sm font-semibold" style={{ color: '#4ade80' }}>
+            Total: {formatCurrency(despesa.gastei)}
+          </div>
+          {despesa.historico_gastos && despesa.historico_gastos.length > 0 && (
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {despesa.historico_gastos.map((valor, idx) => (
+                <div key={idx} className="flex items-center justify-between text-sm bg-slate-700 p-2 rounded">
+                  <span>{formatCurrency(valor)}</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const novoHistorico = despesa.historico_gastos.filter((_, i) => i !== idx);
+                      const novoGastei = novoHistorico.reduce((a, b) => a + b, 0);
+                      onSubmit('historico_gastos', novoHistorico);
+                      onSubmit('gastei', novoGastei);
+                    }}
+                  >
+                    <Trash2 className="w-3 h-3 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
