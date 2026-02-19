@@ -651,15 +651,21 @@ function App() {
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
-                      data={meses.map(m => ({
-                        nome: m.nome,
-                        receitas: m.total_receitas,
-                        despesas: m.total_despesas,
-                        sobra: m.sobra
-                      }))}
+                      data={meses.map(m => {
+                        const mesAno = m.nome.split(' ');
+                        const mes = new Date(`${mesAno[0]} 1, ${mesAno[1]}`).getMonth() + 1;
+                        const ano = mesAno[1].slice(-2);
+                        const mesRef = `${String(mes).padStart(2, '0')}/${ano}`;
+                        return {
+                          nome: mesRef,
+                          receitas: m.total_receitas,
+                          despesas: m.total_despesas,
+                          sobra: m.sobra
+                        };
+                      })}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
-                      <XAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
+                      <XAxis dataKey="nome" stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
                       <YAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
                       <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155' }} />
                       <RechartsTooltip
