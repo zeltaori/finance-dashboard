@@ -652,10 +652,11 @@ function App() {
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
                       data={meses.map(m => {
+                        const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
                         const mesAno = m.nome.split(' ');
-                        const mes = new Date(`${mesAno[0]} 1, ${mesAno[1]}`).getMonth() + 1;
+                        const mesNum = mesesMap[mesAno[0]] || '01';
                         const ano = mesAno[1].slice(-2);
-                        const mesRef = `${String(mes).padStart(2, '0')}/${ano}`;
+                        const mesRef = `${mesNum}/${ano}`;
                         return {
                           nome: mesRef,
                           receitas: m.total_receitas,
