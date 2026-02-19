@@ -1,41 +1,1040 @@
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import { useState, useRef, useEffect, createContext } from 'react';
+import { 
+  Wallet, ChevronLeft, ChevronRight, Plus, Pencil, Trash2, 
+  Check, X, TrendingUp, TrendingDown, Calendar, DollarSign, Sun, Moon, Download, Upload
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
+} from 'recharts';
+import { meses as initialMeses, formatCurrency, type Receita, type Despesa, type MesData, bancoDados } from './data/dadosFinanceiros';
+import './App.css';
 
+// Tema Context
+const ThemeContext = createContext<{ isDark: boolean; toggleTheme: () => void }>({ isDark: true, toggleTheme: () => {} });
 
-function Router() {
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+
+// Google Drive API Config
+const GOOGLE_CLIENT_ID = 'SEU_CLIENT_ID'; // Substituir pelo Client ID real
+const GOOGLE_API_KEY = 'SUA_API_KEY'; // Substituir pela API Key real
+const GOOGLE_DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'];
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+function App() {
+  const [isDark, setIsDark] = useState(true);
+  const [meses, setMeses] = useState<MesData[]>(() => {
+    const saved = localStorage.getItem('gestaoFinanceira_dados');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return initialMeses;
+      }
+    }
+    return initialMeses;
+  });
+  const [mesSelecionado, setMesSelecionado] = useState<number>(13);
+  const [activeTab, setActiveTab] = useState('mes');
+  const [dinheiroEspecie, setDinheiroEspecie] = useState(0);
+  const [dataHoje, setDataHoje] = useState(new Date().toISOString().split('T')[0]);
+  const [dataFinal, setDataFinal] = useState('2026-02-28');
+  const [finsDeSemanaEditavel, setFinsDeSemanaEditavel] = useState(4);
+  const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const mesData = meses[mesSelecionado];
+
+  // Salvar no localStorage
+  useEffect(() => {
+    localStorage.setItem('gestaoFinanceira_dados', JSON.stringify(meses));
+  }, [meses]);
+
+  // Backup automático ao fechar
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const backupData = { meses, timestamp: new Date().toISOString(), versao: '1.0' };
+      localStorage.setItem('gestaoFinanceira_backup_auto', JSON.stringify(backupData));
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [meses]);
+
+  // Inicializar Google API (desabilitado por padrão)
+  useEffect(() => {
+    // Google API initialization removed for static deployment
+    // Uncomment and configure if using a backend with Google Drive integration
+  }, []);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
+  // Calcular VR FDS que falta gastar
+  const calcularVRFDSFalta = () => {
+    const vrFds = mesData.despesas.find(d => d.descricao.toUpperCase().includes('VR FDS'));
+    return vrFds ? vrFds.falta : 0;
+  };
+
+  // Calcular gastos em "Outras"
+  const calcularGastosOutras = () => {
+    const outras = mesData.despesas.find(d => d.isOutras);
+    return outras ? outras.gastei : 0;
+  };
+
+  // Calcular sobra: receitas - despesas + VR FDS que falta - gastos Outras
+  const calcularSobra = () => {
+    const vrFdsFalta = calcularVRFDSFalta();
+    const gastosOutras = calcularGastosOutras();
+    return mesData.total_receitas - mesData.total_despesas + vrFdsFalta - gastosOutras;
+  };
+
+  // Calcular saldo VR (VR SEMANA + VR FDS)
+  const calcularSaldoVR = () => {
+    const vrSemana = mesData.despesas.find(d => d.descricao.toUpperCase().includes('VR SEMANA'));
+    const vrFds = mesData.despesas.find(d => d.descricao.toUpperCase().includes('VR FDS'));
+    return (vrSemana ? vrSemana.falta : 0) + (vrFds ? vrFds.falta : 0);
+  };
+
+  // Calcular dias restantes
+  const calcularDiasRestantes = () => {
+    const hoje = new Date(dataHoje);
+    const final = new Date(dataFinal);
+    const diffTime = final.getTime() - hoje.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  };
+
+  const diasRestantes = calcularDiasRestantes();
+  const sobra = calcularSobra();
+  const saldoVR = calcularSaldoVR();
+  const totalLivre = sobra + dinheiroEspecie;
+  const livreFDS = finsDeSemanaEditavel > 0 ? totalLivre / finsDeSemanaEditavel : 0;
+  const mediaDiaria = diasRestantes > 0 ? totalLivre / diasRestantes : 0;
+
+  const scrollMeses = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: direction === 'left' ? -200 : 200, behavior: 'smooth' });
+    }
+  };
+
+  // Recalcular falta
+  const recalcularFalta = (despesa: Despesa) => {
+    if (despesa.isOutras) {
+      despesa.valor = -despesa.gastei;
+      despesa.falta = 0;
+    } else {
+      despesa.falta = Math.max(0, Math.abs(despesa.valor) - despesa.gastei);
+    }
+  };
+
+  // Adicionar Receita
+  const handleAddReceita = (novaReceita: Omit<Receita, 'id'>) => {
+    const newMeses = [...meses];
+    const id = `r${Date.now()}`;
+    newMeses[mesSelecionado].receitas.push({ ...novaReceita, id });
+    newMeses[mesSelecionado].total_receitas += novaReceita.valor;
+    setMeses(newMeses);
+  };
+
+  // Adicionar Despesa
+  const handleAddDespesa = (novaDespesa: Omit<Despesa, 'id' | 'falta' | 'historico_gastos'>) => {
+    const newMeses = [...meses];
+    const id = `d${Date.now()}`;
+    const isOutras = novaDespesa.descricao === 'Outras';
+    const gastei = isOutras ? 0 : (novaDespesa.gastei || 0);
+    const valor = isOutras ? 0 : novaDespesa.valor;
+    const falta = isOutras ? 0 : Math.max(0, Math.abs(valor) - gastei);
+    
+    newMeses[mesSelecionado].despesas.push({ 
+      ...novaDespesa, id, falta,
+      historico_gastos: gastei > 0 ? [gastei] : [],
+      isOutras
+    });
+    
+    if (!isOutras) {
+      newMeses[mesSelecionado].total_despesas += Math.abs(valor);
+    }
+    setMeses(newMeses);
+  };
+
+  // Editar Receita
+  const handleEditReceita = (id: string, field: string, value: unknown) => {
+    const newMeses = [...meses];
+    const receita = newMeses[mesSelecionado].receitas.find(r => r.id === id);
+    if (receita) {
+      const oldValor = receita.valor;
+      (receita as unknown as Record<string, unknown>)[field] = value;
+      if (field === 'valor') {
+        newMeses[mesSelecionado].total_receitas += (value as number) - oldValor;
+      }
+    }
+    setMeses(newMeses);
+  };
+
+  // Editar Despesa
+  const handleEditDespesa = (id: string, field: string, value: unknown) => {
+    const newMeses = [...meses];
+    const despesa = newMeses[mesSelecionado].despesas.find(d => d.id === id);
+    if (despesa) {
+      if (field === 'valor') {
+        const oldValor = despesa.valor;
+        despesa.valor = value as number;
+        newMeses[mesSelecionado].total_despesas += Math.abs(value as number) - Math.abs(oldValor);
+        recalcularFalta(despesa);
+      } else if (field === 'gastei') {
+        despesa.gastei = value as number;
+        recalcularFalta(despesa);
+      } else {
+        (despesa as unknown as Record<string, unknown>)[field] = value;
+      }
+    }
+    setMeses(newMeses);
+  };
+
+  // Deletar Receita
+  const handleDeleteReceita = (id: string) => {
+    const newMeses = [...meses];
+    const index = newMeses[mesSelecionado].receitas.findIndex(r => r.id === id);
+    if (index !== -1) {
+      const receita = newMeses[mesSelecionado].receitas[index];
+      newMeses[mesSelecionado].total_receitas -= receita.valor;
+      newMeses[mesSelecionado].receitas.splice(index, 1);
+      setMeses(newMeses);
+    }
+  };
+
+  // Deletar Despesa
+  const handleDeleteDespesa = (id: string) => {
+    const newMeses = [...meses];
+    const index = newMeses[mesSelecionado].despesas.findIndex(d => d.id === id);
+    if (index !== -1) {
+      const despesa = newMeses[mesSelecionado].despesas[index];
+      if (!despesa.isOutras) {
+        newMeses[mesSelecionado].total_despesas -= Math.abs(despesa.valor);
+      }
+      newMeses[mesSelecionado].despesas.splice(index, 1);
+      setMeses(newMeses);
+    }
+  };
+
+  // Download JSON
+  const handleDownloadJSON = () => {
+    const dataStr = JSON.stringify(meses, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `gestao_financeira_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Upload JSON
+  const handleUploadJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target?.result as string);
+          if (data && Array.isArray(data)) {
+            setMeses(data);
+            alert('Dados importados com sucesso!');
+          }
+        } catch {
+          alert('Erro ao importar arquivo. Verifique se é um JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+        {/* Header */}
+        <header className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50`}>
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Wallet className="w-8 h-8 text-blue-500" />
+              <h1 className="text-2xl font-bold">Gestão Financeira</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="rounded-full"
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="w-4 h-4" />
+                    Exportar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Exportar Dados</DialogTitle>
+                  </DialogHeader>
+                  <Button onClick={handleDownloadJSON} className="w-full">
+                    Baixar como JSON
+                  </Button>
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Upload className="w-4 h-4" />
+                    Importar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Importar Dados</DialogTitle>
+                  </DialogHeader>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleUploadJSON}
+                    className="w-full"
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* Seleção de Mês */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Selecione o Mês</h2>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollMeses('left')}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => scrollMeses('right')}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div
+              ref={scrollRef}
+              className="flex gap-3 overflow-x-auto pb-4 scroll-smooth"
+              style={{ scrollBehavior: 'smooth' }}
+            >
+              {meses.map((mes, index) => (
+                <button
+                  key={index}
+                  onClick={() => setMesSelecionado(index)}
+                  className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${
+                    mesSelecionado === index
+                      ? 'bg-blue-500 text-white'
+                      : isDark
+                      ? 'bg-gray-700 hover:bg-gray-600'
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  {mes.nome}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Resumo do Mês */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-500">Total de Receitas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">
+                  {formatCurrency(mesData.total_receitas)}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-500">Total de Despesas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-500">
+                  {formatCurrency(mesData.total_despesas)}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-500">Sobra</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {formatCurrency(sobra)}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-gray-500">Saldo VR</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-500">
+                  {formatCurrency(saldoVR)}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Configurações */}
+          <Card className={`mb-8 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
+            <CardHeader>
+              <CardTitle>Configurações</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label className="text-sm">Dinheiro em Espécie (R$)</Label>
+                  <Input
+                    type="number"
+                    value={dinheiroEspecie}
+                    onChange={(e) => setDinheiroEspecie(parseFloat(e.target.value) || 0)}
+                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Data Hoje</Label>
+                  <Input
+                    type="date"
+                    value={dataHoje}
+                    onChange={(e) => setDataHoje(e.target.value)}
+                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Data Final do Mês</Label>
+                  <Input
+                    type="date"
+                    value={dataFinal}
+                    onChange={(e) => setDataFinal(e.target.value)}
+                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm">Fins de Semana</Label>
+                  <Input
+                    type="number"
+                    value={finsDeSemanaEditavel}
+                    onChange={(e) => setFinsDeSemanaEditavel(parseInt(e.target.value) || 0)}
+                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div>
+                  <Label className="text-sm text-gray-500">Total Livre</Label>
+                  <div className="text-lg font-semibold">{formatCurrency(totalLivre)}</div>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Por Fim de Semana</Label>
+                  <div className="text-lg font-semibold">{formatCurrency(livreFDS)}</div>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Dias Restantes</Label>
+                  <div className="text-lg font-semibold">{diasRestantes}</div>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Média Diária</Label>
+                  <div className="text-lg font-semibold">{formatCurrency(mediaDiaria)}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+            <TabsList className={`grid w-full grid-cols-3 ${isDark ? 'bg-gray-800' : ''}`}>
+              <TabsTrigger value="mes">Mês Atual</TabsTrigger>
+              <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
+              <TabsTrigger value="graficos">Gráficos</TabsTrigger>
+            </TabsList>
+
+            {/* Tab: Mês Atual */}
+            <TabsContent value="mes" className="space-y-6">
+              {/* Receitas */}
+              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-green-500" />
+                      Receitas
+                    </CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="gap-2">
+                          <Plus className="w-4 h-4" />
+                          Adicionar
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Adicionar Receita</DialogTitle>
+                        </DialogHeader>
+                        <ReceitaForm onSubmit={handleAddReceita} />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {mesData.receitas.map((receita) => (
+                      <div
+                        key={receita.id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          isDark ? 'bg-gray-700' : 'bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{receita.descricao}</div>
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {receita.categoria}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-500">
+                            {formatCurrency(receita.valor)}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Editar Receita</DialogTitle>
+                              </DialogHeader>
+                              <ReceitaEditForm
+                                receita={receita}
+                                onSubmit={(field, value) => handleEditReceita(receita.id, field, value)}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteReceita(receita.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Despesas */}
+              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingDown className="w-5 h-5 text-red-500" />
+                      Despesas
+                    </CardTitle>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="gap-2">
+                          <Plus className="w-4 h-4" />
+                          Adicionar
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Adicionar Despesa</DialogTitle>
+                        </DialogHeader>
+                        <DespesaForm onSubmit={handleAddDespesa} />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {mesData.despesas.map((despesa) => (
+                      <div
+                        key={despesa.id}
+                        className={`flex items-center justify-between p-3 rounded-lg ${
+                          isDark ? 'bg-gray-700' : 'bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium">{despesa.descricao}</div>
+                          <Badge variant="outline" className="text-xs mt-1">
+                            {despesa.categoria}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-red-500">
+                            {formatCurrency(Math.abs(despesa.valor))}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Gastei: {formatCurrency(despesa.gastei)} | Falta: {formatCurrency(despesa.falta)}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Editar Despesa</DialogTitle>
+                              </DialogHeader>
+                              <DespesaEditForm
+                                despesa={despesa}
+                                onSubmit={(field, value) => handleEditDespesa(despesa.id, field, value)}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDespesa(despesa.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab: Comparativo */}
+            <TabsContent value="comparativo">
+              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                <CardHeader>
+                  <CardTitle>Comparativo de Meses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={meses.map(m => ({
+                        nome: m.nome.split(' ')[0],
+                        receitas: m.total_receitas,
+                        despesas: m.total_despesas,
+                        sobra: m.sobra
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
+                      <XAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
+                      <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
+                      <Legend />
+                      <RechartsTooltip
+                        contentStyle={{
+                          backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+                          border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                          color: isDark ? '#f3f4f6' : '#111827'
+                        }}
+                      />
+                      <Bar dataKey="receitas" fill="#10b981" />
+                      <Bar dataKey="despesas" fill="#ef4444" />
+                      <Bar dataKey="sobra" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Tab: Gráficos */}
+            <TabsContent value="graficos">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Gráfico de Receitas */}
+                <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                  <CardHeader>
+                    <CardTitle>Distribuição de Receitas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={mesData.receitas.map(r => ({
+                            name: r.descricao,
+                            value: r.valor
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {mesData.receitas.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip
+                          formatter={(value) => formatCurrency(value as number)}
+                          contentStyle={{
+                            backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+                            border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                            color: isDark ? '#f3f4f6' : '#111827'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Gráfico de Despesas */}
+                <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                  <CardHeader>
+                    <CardTitle>Distribuição de Despesas</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={mesData.despesas
+                            .filter(d => !d.isOutras && d.valor !== 0)
+                            .map(d => ({
+                              name: d.descricao,
+                              value: Math.abs(d.valor)
+                            }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {mesData.despesas
+                            .filter(d => !d.isOutras && d.valor !== 0)
+                            .map((_, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                        </Pie>
+                        <RechartsTooltip
+                          formatter={(value) => formatCurrency(value as number)}
+                          contentStyle={{
+                            backgroundColor: isDark ? '#1f2937' : '#f9fafb',
+                            border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                            color: isDark ? '#f3f4f6' : '#111827'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </ThemeContext.Provider>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
+// Componentes de Formulário
+function ReceitaForm({ onSubmit }: { onSubmit: (receita: Omit<Receita, 'id'>) => void }) {
+  const [descricao, setDescricao] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [valor, setValor] = useState('');
+  const [open, setOpen] = useState(false);
 
-function App() {
+  const handleSubmit = () => {
+    if (descricao && categoria && valor) {
+      onSubmit({
+        descricao,
+        categoria,
+        valor: parseFloat(valor)
+      });
+      setDescricao('');
+      setCategoria('');
+      setValor('');
+      setOpen(false);
+    }
+  };
+
   return (
-    <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <div className="space-y-4">
+      <div>
+        <Label>Descrição</Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-start">
+              {descricao || 'Selecione uma descrição'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput
+                placeholder="Buscar descrição..."
+                value={descricao}
+                onValueChange={setDescricao}
+              />
+              <CommandEmpty>Nenhuma descrição encontrada.</CommandEmpty>
+              <CommandGroup>
+                <CommandList>
+                  {bancoDados.receitas.map((item) => (
+                    <CommandItem
+                      key={item.descricao}
+                      value={item.descricao}
+                      onSelect={(value) => {
+                        setDescricao(value);
+                        setCategoria(item.categoria);
+                        setOpen(false);
+                      }}
+                    >
+                      {item.descricao}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div>
+        <Label>Categoria</Label>
+        <Input
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+          placeholder="Categoria"
+        />
+      </div>
+      <div>
+        <Label>Valor (R$)</Label>
+        <Input
+          type="number"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          placeholder="0.00"
+          step="0.01"
+        />
+      </div>
+      <Button onClick={handleSubmit} className="w-full">
+        Adicionar Receita
+      </Button>
+    </div>
+  );
+}
+
+function ReceitaEditForm({
+  receita,
+  onSubmit
+}: {
+  receita: Receita;
+  onSubmit: (field: string, value: unknown) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Descrição</Label>
+        <Input
+          value={receita.descricao}
+          onChange={(e) => onSubmit('descricao', e.target.value)}
+        />
+      </div>
+      <div>
+        <Label>Categoria</Label>
+        <Input
+          value={receita.categoria}
+          onChange={(e) => onSubmit('categoria', e.target.value)}
+        />
+      </div>
+      <div>
+        <Label>Valor (R$)</Label>
+        <Input
+          type="number"
+          value={receita.valor}
+          onChange={(e) => onSubmit('valor', parseFloat(e.target.value))}
+          step="0.01"
+        />
+      </div>
+    </div>
+  );
+}
+
+function DespesaForm({ onSubmit }: { onSubmit: (despesa: Omit<Despesa, 'id' | 'falta' | 'historico_gastos'>) => void }) {
+  const [descricao, setDescricao] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [valor, setValor] = useState('');
+  const [gastei, setGastei] = useState('');
+  const [open, setOpen] = useState(false);
+
+  const handleSubmit = () => {
+    if (descricao && categoria && valor) {
+      onSubmit({
+        descricao,
+        categoria,
+        valor: -parseFloat(valor),
+        gastei: parseFloat(gastei) || 0
+      });
+      setDescricao('');
+      setCategoria('');
+      setValor('');
+      setGastei('');
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Descrição</Label>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-start">
+              {descricao || 'Selecione uma descrição'}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0">
+            <Command>
+              <CommandInput
+                placeholder="Buscar descrição..."
+                value={descricao}
+                onValueChange={setDescricao}
+              />
+              <CommandEmpty>Nenhuma descrição encontrada.</CommandEmpty>
+              <CommandGroup>
+                <CommandList>
+                  {bancoDados.despesas.map((item) => (
+                    <CommandItem
+                      key={item.descricao}
+                      value={item.descricao}
+                      onSelect={(value) => {
+                        setDescricao(value);
+                        setCategoria(item.categoria);
+                        setOpen(false);
+                      }}
+                    >
+                      {item.descricao}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div>
+        <Label>Categoria</Label>
+        <Input
+          value={categoria}
+          onChange={(e) => setCategoria(e.target.value)}
+          placeholder="Categoria"
+        />
+      </div>
+      <div>
+        <Label>Valor (R$)</Label>
+        <Input
+          type="number"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          placeholder="0.00"
+          step="0.01"
+        />
+      </div>
+      <div>
+        <Label>Já Gastei (R$)</Label>
+        <Input
+          type="number"
+          value={gastei}
+          onChange={(e) => setGastei(e.target.value)}
+          placeholder="0.00"
+          step="0.01"
+        />
+      </div>
+      <Button onClick={handleSubmit} className="w-full">
+        Adicionar Despesa
+      </Button>
+    </div>
+  );
+}
+
+function DespesaEditForm({
+  despesa,
+  onSubmit
+}: {
+  despesa: Despesa;
+  onSubmit: (field: string, value: unknown) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label>Descrição</Label>
+        <Input
+          value={despesa.descricao}
+          onChange={(e) => onSubmit('descricao', e.target.value)}
+        />
+      </div>
+      <div>
+        <Label>Categoria</Label>
+        <Input
+          value={despesa.categoria}
+          onChange={(e) => onSubmit('categoria', e.target.value)}
+        />
+      </div>
+      <div>
+        <Label>Valor (R$)</Label>
+        <Input
+          type="number"
+          value={Math.abs(despesa.valor)}
+          onChange={(e) => onSubmit('valor', -parseFloat(e.target.value))}
+          step="0.01"
+        />
+      </div>
+      <div>
+        <Label>Já Gastei (R$)</Label>
+        <Input
+          type="number"
+          value={despesa.gastei}
+          onChange={(e) => onSubmit('gastei', parseFloat(e.target.value))}
+          step="0.01"
+        />
+      </div>
+    </div>
   );
 }
 

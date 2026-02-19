@@ -1,0 +1,152 @@
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom scrollbar for tables */
+table::-webkit-scrollbar {
+  height: 8px;
+}
+
+table::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+table::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+table::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Focus styles */
+input:focus, button:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #10b981;
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Card hover effects */
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* Animation for tab content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tabs-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Light theme specific styles */
+.light-theme {
+  --bg-primary: #f3f4f6;
+  --bg-secondary: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+/* High contrast text for better visibility */
+.text-high-contrast {
+  color: #111827;
+}
+
+.dark .text-high-contrast {
+  color: #ffffff;
+}
+
+/* Improved input visibility */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* Better button visibility */
+button {
+  font-weight: 500;
+}
+
+/* Badge improvements */
+.badge-improved {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+/* Card shadow for light theme */
+.card-light {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* Command palette improvements */
+[data-radix-popper-content-wrapper] {
+  z-index: 100 !important;
+}
+
+/* Popover improvements */
+[role="dialog"] {
+  z-index: 50;
+}
+
+/* Ensure proper z-index stacking */
+.popover-content {
+  z-index: 100;
+}
+
+/* Table improvements */
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th, td {
+  vertical-align: middle;
+}
+
+/* Better number input */
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Remove arrows from number input */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
