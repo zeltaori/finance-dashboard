@@ -1031,18 +1031,25 @@ function App() {
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart
                       data={meses.map(m => {
-                        const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
-                        const mesAno = m.nome.split(' ');
-                        const mesNum = mesesMap[mesAno[0]] || '01';
-                        const ano = mesAno[1].slice(-2);
-                        const mesRef = `${mesNum}/${ano}`;
+                        let mesRef = '01/26';
+                        if (m.dataFinal) {
+                          const [ano, mes] = m.dataFinal.split('-');
+                          mesRef = `${mes}/${ano.slice(-2)}`;
+                        } else {
+                          const mesesMap: Record<string, string> = { 'Janeiro': '01', 'Fevereiro': '02', 'Março': '03', 'Abril': '04', 'Maio': '05', 'Junho': '06', 'Julho': '07', 'Agosto': '08', 'Setembro': '09', 'Outubro': '10', 'Novembro': '11', 'Dezembro': '12' };
+                          const mesAno = m.nome.split(' ');
+                          const mesNum = mesesMap[mesAno[0]] || '01';
+                          const ano = mesAno[1].slice(-2);
+                          mesRef = `${mesNum}/${ano}`;
+                        }
                         return {
                           nome: mesRef,
                           receitas: m.total_receitas,
                           despesas: m.total_despesas,
                           sobra: m.sobra
                         };
-                      })}
+                      })
+                    }
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
                       <XAxis dataKey="nome" stroke={isDark ? '#cbd5e1' : '#6b7280'} angle={-45} textAnchor="end" height={80} />
