@@ -44,18 +44,8 @@ const COLORS = COLORS_LIGHT;
 
 function App() {
   const [isDark, setIsDark] = useState(true);
-  const [meses, setMeses] = useState<MesData[]>(() => {
-    // Tentar carregar do localStorage como fallback
-    try {
-      const saved = localStorage.getItem('gestaoFinanceira_dados');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados do localStorage:', error);
-    }
-    return initialMeses;
-  });
+  const [meses, setMeses] = useState<MesData[]>(initialMeses);
+  const [isLoadingFromFirebase, setIsLoadingFromFirebase] = useState(false);
   const [mesSelecionado, setMesSelecionado] = useState<number>(0);
   const [activeTab, setActiveTab] = useState('mes');
   const [dinheiroEspecie, setDinheiroEspecie] = useState(0);
@@ -74,10 +64,12 @@ function App() {
 
   const mesData = meses[mesSelecionado];
 
-  // Salvar no localStorage
+  // Salvar no localStorage apenas se usuario estiver logado
   useEffect(() => {
-    localStorage.setItem('gestaoFinanceira_dados', JSON.stringify(meses));
-  }, [meses]);
+    if (user) {
+      localStorage.setItem('gestaoFinanceira_dados', JSON.stringify(meses));
+    }
+  }, [meses, user]);
 
   // Backup automático ao fechar
   useEffect(() => {
@@ -95,13 +87,20 @@ function App() {
       setUser(currentUser);
       if (currentUser) {
         console.log("Usuario autenticado:", currentUser.uid);
+        setIsLoadingFromFirebase(true);
         loadBackups();
         // Aumentar delay para garantir que o Firebase esteja pronto
         setTimeout(async () => {
           console.log("Chamando loadUserData com delay de 1 segundo...");
           await loadUserData();
-          console.log("loadUserData concluído!");
+          console.log("loadUserData concluido!");
+          setIsLoadingFromFirebase(false);
         }, 1000);
+      } else {
+        // Usuario nao esta logado - usar base simplificada
+        console.log("Usuario nao autenticado, usando base simplificada");
+        setMeses(initialMeses);
+        setIsLoadingFromFirebase(false);
       }
     });
     return unsubscribe;
@@ -146,20 +145,23 @@ function App() {
       console.log('Backups carregados:', backupsList.length);
       if (backupsList.length > 0) {
         const latestBackup = backupsList[0];
-        console.log('Último backup:', latestBackup);
+        console.log('Ultimo backup:', latestBackup);
         const userData = latestBackup.data as any;
-        console.log('Dados do usuário:', userData);
-        if (userData && userData.meses) {
+        console.log('Dados do usuario:', userData);
+        if (userData && userData.meses && userData.meses.length > 0) {
           console.log('Carregando meses do Firebase:', userData.meses.length);
           setMeses(userData.meses);
         } else {
-          console.log('Nenhum dado de meses encontrado no backup');
+          console.log('Nenhum dado de meses encontrado no backup, usando base simplificada');
+          setMeses(initialMeses);
         }
       } else {
-        console.log('Nenhum backup encontrado para este usuário');
+        console.log('Nenhum backup encontrado para este usuario, usando base simplificada');
+        setMeses(initialMeses);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
+      console.error('Erro ao carregar dados do usuario:', error);
+      // Em caso de erro, manter base simplificada
     }
   };
 
