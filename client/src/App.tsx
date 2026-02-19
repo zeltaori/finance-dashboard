@@ -487,10 +487,9 @@ function App() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className={`grid w-full grid-cols-3 ${isDark ? 'bg-slate-800' : ''}`}>
+            <TabsList className={`grid w-full grid-cols-2 ${isDark ? 'bg-slate-800' : ''}`}>
               <TabsTrigger value="mes">Mês Atual</TabsTrigger>
               <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
-              <TabsTrigger value="graficos">Gráficos</TabsTrigger>
             </TabsList>
 
             {/* Tab: Mês Atual */}
@@ -529,7 +528,7 @@ function App() {
                         } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-semibold text-base" style={{ color: textColorBody }}>{receita.descricao}</div>
+                          <div className="font-semibold text-base" style={{ color: isDark ? '#f1f5f9' : textColorBody }}>{receita.descricao}</div>
                           <Badge variant="outline" className="text-xs mt-1 font-medium" style={{ color: isDark ? '#f1f5f9' : '#334155' }}>
                             {receita.categoria}
                           </Badge>
@@ -604,7 +603,7 @@ function App() {
                         } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-semibold text-base" style={{ color: textColorBody }}>{despesa.descricao}</div>
+                          <div className="font-semibold text-base" style={{ color: isDark ? '#f1f5f9' : textColorBody }}>{despesa.descricao}</div>
                           <Badge variant="outline" className="text-xs mt-1 font-medium" style={{ color: isDark ? '#f1f5f9' : '#334155' }}>
                             {despesa.categoria}
                           </Badge>
@@ -666,9 +665,9 @@ function App() {
                       }))}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
-                      <XAxis stroke={isDark ? '#94a3b8' : '#6b7280'} />
-                      <YAxis stroke={isDark ? '#94a3b8' : '#6b7280'} />
-                      <Legend />
+                      <XAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
+                      <YAxis stroke={isDark ? '#cbd5e1' : '#6b7280'} />
+                      <Legend wrapperStyle={{ color: isDark ? '#cbd5e1' : '#334155' }} />
                       <RechartsTooltip
                         contentStyle={{
                           backgroundColor: isDark ? '#0f172a' : '#f9fafb',
@@ -685,90 +684,6 @@ function App() {
               </Card>
             </TabsContent>
 
-            {/* Tab: Gráficos */}
-            <TabsContent value="graficos">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Gráfico de Receitas */}
-                <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-                  <CardHeader>
-                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Distribuição de Receitas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={mesData.receitas.map(r => ({
-                            name: r.descricao,
-                            value: r.valor
-                          }))}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {mesData.receitas.map((_, index) => (
-                            <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip
-                          formatter={(value) => formatCurrency(value as number)}
-                          contentStyle={{
-                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
-                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
-                            color: isDark ? '#f1f5f9' : '#111827'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {/* Gráfico de Despesas */}
-                <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
-                  <CardHeader>
-                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Distribuição de Despesas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={mesData.despesas
-                            .filter(d => !d.isOutras && d.valor !== 0)
-                            .map(d => ({
-                              name: d.descricao,
-                              value: Math.abs(d.valor)
-                            }))}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {mesData.despesas
-                            .filter(d => !d.isOutras && d.valor !== 0)
-                            .map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                            ))}
-                        </Pie>
-                        <RechartsTooltip
-                          formatter={(value) => formatCurrency(value as number)}
-                          contentStyle={{
-                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
-                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
-                            color: isDark ? '#f1f5f9' : '#111827'
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
           </Tabs>
         </main>
       </div>
