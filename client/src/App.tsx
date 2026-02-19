@@ -269,13 +269,13 @@ function App() {
 
   return (
     <ThemeContext.Provider value={{ isDark, toggleTheme }}>
-      <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+      <div className={`min-h-screen ${isDark ? 'bg-slate-950 text-slate-50' : 'bg-gray-50 text-gray-900'}`}>
         {/* Header */}
-        <header className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50`}>
+        <header className={`${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'} border-b sticky top-0 z-50 shadow-sm`}>
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Wallet className="w-8 h-8 text-blue-500" />
-              <h1 className="text-2xl font-bold">Gestão Financeira</h1>
+              <Wallet className="w-8 h-8 text-blue-400" />
+              <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Gestão Financeira</h1>
             </div>
             <div className="flex items-center gap-4">
               <Button
@@ -330,7 +330,7 @@ function App() {
           {/* Seleção de Mês */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Selecione o Mês</h2>
+              <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>Selecione o Mês</h2>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -357,12 +357,12 @@ function App() {
                 <button
                   key={index}
                   onClick={() => setMesSelecionado(index)}
-                  className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
                     mesSelecionado === index
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-blue-500 text-white shadow-lg'
                       : isDark
-                      ? 'bg-gray-700 hover:bg-gray-600'
-                      : 'bg-gray-200 hover:bg-gray-300'
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-100'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
                   }`}
                 >
                   {mes.nome}
@@ -373,9 +373,9 @@ function App() {
 
           {/* Resumo do Mês */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-500">Total de Receitas</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total de Receitas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-500">
@@ -384,9 +384,9 @@ function App() {
               </CardContent>
             </Card>
 
-            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-500">Total de Despesas</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total de Despesas</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-500">
@@ -395,9 +395,9 @@ function App() {
               </CardContent>
             </Card>
 
-            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-500">Sobra</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Sobra</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className={`text-2xl font-bold ${sobra >= 0 ? 'text-green-500' : 'text-red-500'}`}>
@@ -406,9 +406,9 @@ function App() {
               </CardContent>
             </Card>
 
-            <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+            <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-gray-500">Saldo VR</CardTitle>
+                <CardTitle className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Saldo VR</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-500">
@@ -419,66 +419,66 @@ function App() {
           </div>
 
           {/* Configurações */}
-          <Card className={`mb-8 ${isDark ? 'bg-gray-800 border-gray-700' : ''}`}>
+          <Card className={`mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : ''}`}>
             <CardHeader>
-              <CardTitle>Configurações</CardTitle>
+              <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Configurações</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <Label className="text-sm">Dinheiro em Espécie (R$)</Label>
+                  <Label className="text-sm font-semibold">Dinheiro em Espécie (R$)</Label>
                   <Input
                     type="number"
                     value={dinheiroEspecie}
                     onChange={(e) => setDinheiroEspecie(parseFloat(e.target.value) || 0)}
-                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                    className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
                 <div>
-                  <Label className="text-sm">Data Hoje</Label>
+                  <Label className="text-sm font-semibold">Data Hoje</Label>
                   <Input
                     type="date"
                     value={dataHoje}
                     onChange={(e) => setDataHoje(e.target.value)}
-                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                    className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
                 <div>
-                  <Label className="text-sm">Data Final do Mês</Label>
+                  <Label className="text-sm font-semibold">Data Final do Mês</Label>
                   <Input
                     type="date"
                     value={dataFinal}
                     onChange={(e) => setDataFinal(e.target.value)}
-                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                    className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
                 <div>
-                  <Label className="text-sm">Fins de Semana</Label>
+                  <Label className="text-sm font-semibold">Fins de Semana</Label>
                   <Input
                     type="number"
                     value={finsDeSemanaEditavel}
                     onChange={(e) => setFinsDeSemanaEditavel(parseInt(e.target.value) || 0)}
-                    className={isDark ? 'bg-gray-700 border-gray-600' : ''}
+                    className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                 <div>
-                  <Label className="text-sm text-gray-500">Total Livre</Label>
-                  <div className="text-lg font-semibold">{formatCurrency(totalLivre)}</div>
+                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Total Livre</Label>
+                  <div className="text-xl font-bold text-blue-400 mt-1">{formatCurrency(totalLivre)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-500">Por Fim de Semana</Label>
-                  <div className="text-lg font-semibold">{formatCurrency(livreFDS)}</div>
+                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Por Fim de Semana</Label>
+                  <div className="text-xl font-bold text-emerald-400 mt-1">{formatCurrency(livreFDS)}</div>
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-500">Dias Restantes</Label>
-                  <div className="text-lg font-semibold">{diasRestantes}</div>
+                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Dias Restantes</Label>
+                  <div className="text-xl font-bold text-purple-400 mt-1">{diasRestantes}</div>
                 </div>
                 <div>
-                  <Label className="text-sm text-gray-500">Média Diária</Label>
-                  <div className="text-lg font-semibold">{formatCurrency(mediaDiaria)}</div>
+                  <Label className="text-sm font-semibold" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>Média Diária</Label>
+                  <div className="text-xl font-bold text-orange-400 mt-1">{formatCurrency(mediaDiaria)}</div>
                 </div>
               </div>
             </CardContent>
@@ -486,7 +486,7 @@ function App() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-            <TabsList className={`grid w-full grid-cols-3 ${isDark ? 'bg-gray-800' : ''}`}>
+            <TabsList className={`grid w-full grid-cols-3 ${isDark ? 'bg-slate-800' : ''}`}>
               <TabsTrigger value="mes">Mês Atual</TabsTrigger>
               <TabsTrigger value="comparativo">Comparativo</TabsTrigger>
               <TabsTrigger value="graficos">Gráficos</TabsTrigger>
@@ -495,11 +495,11 @@ function App() {
             {/* Tab: Mês Atual */}
             <TabsContent value="mes" className="space-y-6">
               {/* Receitas */}
-              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-green-500" />
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      <TrendingUp className="w-5 h-5 text-green-400" />
                       Receitas
                     </CardTitle>
                     <Dialog>
@@ -524,17 +524,17 @@ function App() {
                       <div
                         key={receita.id}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          isDark ? 'bg-gray-700' : 'bg-gray-100'
-                        }`}
+                          isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'
+                        } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-medium">{receita.descricao}</div>
+                          <div className="font-semibold text-base">{receita.descricao}</div>
                           <Badge variant="outline" className="text-xs mt-1">
                             {receita.categoria}
                           </Badge>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-green-500">
+                          <div className="font-bold text-green-400 text-lg">
                             {formatCurrency(receita.valor)}
                           </div>
                         </div>
@@ -570,11 +570,11 @@ function App() {
               </Card>
 
               {/* Despesas */}
-              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingDown className="w-5 h-5 text-red-500" />
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                      <TrendingDown className="w-5 h-5 text-red-400" />
                       Despesas
                     </CardTitle>
                     <Dialog>
@@ -599,20 +599,20 @@ function App() {
                       <div
                         key={despesa.id}
                         className={`flex items-center justify-between p-3 rounded-lg ${
-                          isDark ? 'bg-gray-700' : 'bg-gray-100'
-                        }`}
+                          isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'
+                        } transition-colors`}
                       >
                         <div className="flex-1">
-                          <div className="font-medium">{despesa.descricao}</div>
-                          <Badge variant="outline" className="text-xs mt-1">
+                          <div className="font-semibold text-base">{despesa.descricao}</div>
+                          <Badge variant="outline" className="text-xs mt-1 font-medium">
                             {despesa.categoria}
                           </Badge>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-red-500">
+                          <div className="font-bold text-red-400 text-lg">
                             {formatCurrency(Math.abs(despesa.valor))}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs" style={{ color: isDark ? '#94a3b8' : '#6b7280' }}>
                             Gastei: {formatCurrency(despesa.gastei)} | Falta: {formatCurrency(despesa.falta)}
                           </div>
                         </div>
@@ -650,9 +650,9 @@ function App() {
 
             {/* Tab: Comparativo */}
             <TabsContent value="comparativo">
-              <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+              <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
-                  <CardTitle>Comparativo de Meses</CardTitle>
+                  <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={400}>
@@ -664,15 +664,15 @@ function App() {
                         sobra: m.sobra
                       }))}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-                      <XAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
-                      <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e5e7eb'} />
+                      <XAxis stroke={isDark ? '#94a3b8' : '#6b7280'} />
+                      <YAxis stroke={isDark ? '#94a3b8' : '#6b7280'} />
                       <Legend />
                       <RechartsTooltip
                         contentStyle={{
-                          backgroundColor: isDark ? '#1f2937' : '#f9fafb',
-                          border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                          color: isDark ? '#f3f4f6' : '#111827'
+                          backgroundColor: isDark ? '#0f172a' : '#f9fafb',
+                          border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+                          color: isDark ? '#f1f5f9' : '#111827'
                         }}
                       />
                       <Bar dataKey="receitas" fill="#10b981" />
@@ -688,9 +688,9 @@ function App() {
             <TabsContent value="graficos">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Gráfico de Receitas */}
-                <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
-                    <CardTitle>Distribuição de Receitas</CardTitle>
+                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Distribuição de Receitas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -715,9 +715,9 @@ function App() {
                         <RechartsTooltip
                           formatter={(value) => formatCurrency(value as number)}
                           contentStyle={{
-                            backgroundColor: isDark ? '#1f2937' : '#f9fafb',
-                            border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                            color: isDark ? '#f3f4f6' : '#111827'
+                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
+                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+                            color: isDark ? '#f1f5f9' : '#111827'
                           }}
                         />
                       </PieChart>
@@ -726,9 +726,9 @@ function App() {
                 </Card>
 
                 {/* Gráfico de Despesas */}
-                <Card className={isDark ? 'bg-gray-800 border-gray-700' : ''}>
+                <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
-                    <CardTitle>Distribuição de Despesas</CardTitle>
+                    <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>Distribuição de Despesas</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -757,9 +757,9 @@ function App() {
                         <RechartsTooltip
                           formatter={(value) => formatCurrency(value as number)}
                           contentStyle={{
-                            backgroundColor: isDark ? '#1f2937' : '#f9fafb',
-                            border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                            color: isDark ? '#f3f4f6' : '#111827'
+                            backgroundColor: isDark ? '#0f172a' : '#f9fafb',
+                            border: `1px solid ${isDark ? '#334155' : '#e5e7eb'}`,
+                            color: isDark ? '#f1f5f9' : '#111827'
                           }}
                         />
                       </PieChart>
