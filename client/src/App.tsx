@@ -694,13 +694,10 @@ function App() {
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-1"
-                >
+                <div key={index} className="flex items-center gap-1 md:gap-2">
                   <button
                     onClick={() => setMesSelecionado(index)}
-                    className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
+                    className={`px-2 md:px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors text-sm md:text-base ${
                       mesSelecionado === index
                         ? 'bg-blue-500 text-white shadow-lg'
                         : isDark
@@ -721,9 +718,10 @@ function App() {
                           setMesSelecionado(Math.max(0, novosMeses.length - 1));
                         }
                       }}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 md:p-2"
+                      title="Deletar mes"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
                     </Button>
                   )}
                 </div>
@@ -1025,10 +1023,10 @@ function App() {
             <TabsContent value="comparativo">
               <Card className={isDark ? 'bg-slate-800 border-slate-700' : ''}>
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
+                  <CardTitle className="text-lg md:text-xl font-bold" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Comparativo de Meses</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={400}>
+                <CardContent className="overflow-x-auto">
+                  <ResponsiveContainer width="100%" height={window.innerWidth < 640 ? 300 : 400}>
                     <BarChart
                       data={meses.map(m => {
                         let mesRef = '01/26';
