@@ -82,6 +82,7 @@ function App() {
       setUser(currentUser);
       if (currentUser) {
         loadBackups();
+        loadUserData();
       }
     });
     return unsubscribe;
@@ -108,6 +109,21 @@ function App() {
       setBackups(backupsList);
     } catch (error) {
       console.error('Erro ao carregar backups:', error);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      const backupsList = await firebaseService.listBackups();
+      if (backupsList.length > 0) {
+        const latestBackup = backupsList[0];
+        const userData = latestBackup.data as any;
+        if (userData && userData.meses) {
+          setMeses(userData.meses);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do usuário:', error);
     }
   };
 
