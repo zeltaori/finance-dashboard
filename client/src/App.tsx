@@ -44,8 +44,15 @@ const COLORS = COLORS_LIGHT;
 function App() {
   const [isDark, setIsDark] = useState(true);
   const [meses, setMeses] = useState<MesData[]>(() => {
-    // Limpar dados antigos do localStorage para usar os novos dados
-    localStorage.removeItem('gestaoFinanceira_dados');
+    // Tentar carregar do localStorage como fallback
+    try {
+      const saved = localStorage.getItem('gestaoFinanceira_dados');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do localStorage:', error);
+    }
     return initialMeses;
   });
   const [mesSelecionado, setMesSelecionado] = useState<number>(0);
@@ -81,26 +88,38 @@ function App() {
     const unsubscribe = firebaseService.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        console.log("Usuario autenticado:", currentUser.uid);
         loadBackups();
-        loadUserData();
+        // Aumentar delay para garantir que o Firebase esteja pronto
+        setTimeout(async () => {
+          console.log("Chamando loadUserData com delay de 1 segundo...");
+          await loadUserData();
+          console.log("loadUserData concluído!");
+        }, 1000);
       }
     });
     return unsubscribe;
   }, []);
 
-  // Fazer backup automático quando dados mudam (a cada 30 segundos)
+  // Fazer backup automático quando dados mudam (imediatamente + a cada 30 segundos como fallback)
   useEffect(() => {
     if (!user) return;
     
-    const interval = setInterval(async () => {
+    // Salvar imediatamente quando dados mudam
+    const saveToFirebase = async () => {
       try {
-        console.log('Executando backup automático...');
+        console.log('Salvando dados no Firebase...');
         await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' });
-        console.log('Backup automático realizado com sucesso');
+        console.log('Dados salvos no Firebase com sucesso');
       } catch (error) {
-        console.error('Erro ao fazer backup automático:', error);
+        console.error('Erro ao salvar dados no Firebase:', error);
       }
-    }, 30000); // 30 segundos
+    };
+    
+    saveToFirebase();
+    
+    // Também fazer backup a cada 30 segundos como fallback
+    const interval = setInterval(saveToFirebase, 30000);
 
     return () => clearInterval(interval);
   }, [user, meses]);
@@ -116,13 +135,22 @@ function App() {
 
   const loadUserData = async () => {
     try {
+      console.log('Iniciando loadUserData...');
       const backupsList = await firebaseService.listBackups();
+      console.log('Backups carregados:', backupsList.length);
       if (backupsList.length > 0) {
         const latestBackup = backupsList[0];
+        console.log('Último backup:', latestBackup);
         const userData = latestBackup.data as any;
+        console.log('Dados do usuário:', userData);
         if (userData && userData.meses) {
+          console.log('Carregando meses do Firebase:', userData.meses.length);
           setMeses(userData.meses);
+        } else {
+          console.log('Nenhum dado de meses encontrado no backup');
         }
+      } else {
+        console.log('Nenhum backup encontrado para este usuário');
       }
     } catch (error) {
       console.error('Erro ao carregar dados do usuário:', error);
@@ -321,6 +349,11 @@ function App() {
         recalcularFalta(despesa);
       } else if (field === 'gastei') {
         despesa.gastei = value as number;
+        recalcularFalta(despesa);
+      } else if (field === 'historico_gastos') {
+        // Atualizar historico_gastos e recalcular gastei
+        despesa.historico_gastos = value as number[];
+        despesa.gastei = (value as number[]).reduce((a, b) => a + b, 0);
         recalcularFalta(despesa);
       } else {
         (despesa as unknown as Record<string, unknown>)[field] = value;
