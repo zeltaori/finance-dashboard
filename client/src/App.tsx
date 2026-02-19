@@ -360,6 +360,34 @@ function App() {
               >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </Button>
+              {user ? (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowBackupDialog(true)}
+                    className="gap-2"
+                  >
+                    <Cloud className="w-4 h-4" />
+                    Backups
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleLoginGoogle}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Cloud className="w-4 h-4" />
+                  Login Google
+                </Button>
+              )}
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2">
