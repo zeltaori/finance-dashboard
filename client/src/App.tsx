@@ -702,7 +702,7 @@ function App() {
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <div key={index} className="flex items-center gap-1 md:gap-2">
+                <div key={index} className="flex flex-col items-center gap-1 md:flex-row md:gap-2">
                   <button
                     onClick={() => setMesSelecionado(index)}
                     className={`px-2 md:px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors text-sm md:text-base ${
@@ -726,14 +726,14 @@ function App() {
                           setMesSelecionado(Math.max(0, novosMeses.length - 1));
                         }
                       }}
-                      className={`p-1 md:p-2 ${
+                      className={`p-2 md:p-1 ${
                         isDark
                           ? 'text-red-400 hover:text-red-300 hover:bg-red-950'
                           : 'text-red-500 hover:text-red-700 hover:bg-red-100'
                       }`}
                       title="Deletar mes"
                     >
-                      <Trash2 className="w-4 h-4 md:w-4 md:h-4" />
+                      <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
                     </Button>
                   )}
                 </div>
@@ -870,9 +870,9 @@ function App() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 md:mb-8">
-            <TabsList className={`grid w-full grid-cols-2 ${isDark ? 'bg-slate-800' : ''}`}>
-              <TabsTrigger value="mes" className="text-xs md:text-sm">Mês Atual</TabsTrigger>
-              <TabsTrigger value="comparativo" className="text-xs md:text-sm">Comparativo</TabsTrigger>
+            <TabsList className={`grid w-full grid-cols-2 gap-2 p-1 ${isDark ? 'bg-slate-800' : ''}`}>
+              <TabsTrigger value="mes" className="text-xs md:text-sm py-2 md:py-3">Mês Atual</TabsTrigger>
+              <TabsTrigger value="comparativo" className="text-xs md:text-sm py-2 md:py-3">Comparativo</TabsTrigger>
             </TabsList>
 
             {/* Tab: Mês Atual */}
