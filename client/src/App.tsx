@@ -645,7 +645,7 @@ function App() {
 
                           }
                           const total_receitas = receitas.reduce((sum, r) => sum + r.valor, 0);
-                          const total_despesas = despesas.reduce((sum, d) => sum + d.valor, 0);
+                          const total_despesas = despesas.reduce((sum, d) => sum + Math.abs(d.valor), 0);
                           const sobra = total_receitas - total_despesas;
                           const novoMes: MesData = {
                             nome: nomeMes,
