@@ -561,14 +561,52 @@ function App() {
                       <DialogTitle>Adicionar Novo Mês</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <div>
-                        <Label className="mb-2 block">Selecione o mês:</Label>
-                        <CalendarComponent
-                          mode="single"
-                          selected={novoMesData}
-                          onSelect={setNovoMesData}
-                          className="rounded-md border"
-                        />
+                      <div className="space-y-4">
+                        <div>
+                          <Label className="mb-2 block">Mês:</Label>
+                          <select
+                            value={novoMesData ? novoMesData.getMonth() : new Date().getMonth()}
+                            onChange={(e) => {
+                              const mes = parseInt(e.target.value);
+                              const ano = novoMesData ? novoMesData.getFullYear() : new Date().getFullYear();
+                              const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+                              setNovoMesData(new Date(ano, mes, ultimoDia));
+                            }}
+                            className="w-full p-2 border rounded-md bg-background text-foreground"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => {
+                              const data = new Date(2026, i, 1);
+                              const nomeMes = data.toLocaleString('pt-BR', { month: 'long' });
+                              return (
+                                <option key={i} value={i}>
+                                  {nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+                        <div>
+                          <Label className="mb-2 block">Ano:</Label>
+                          <select
+                            value={novoMesData ? novoMesData.getFullYear() : new Date().getFullYear()}
+                            onChange={(e) => {
+                              const ano = parseInt(e.target.value);
+                              const mes = novoMesData ? novoMesData.getMonth() : new Date().getMonth();
+                              const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+                              setNovoMesData(new Date(ano, mes, ultimoDia));
+                            }}
+                            className="w-full p-2 border rounded-md bg-background text-foreground"
+                          >
+                            {Array.from({ length: 10 }, (_, i) => {
+                              const ano = 2020 + i;
+                              return (
+                                <option key={ano} value={ano}>
+                                  {ano}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <input
