@@ -594,7 +594,12 @@ function App() {
                           let despesas: Despesa[] = [];
                           if (copiarDados) {
                             receitas = ultimoMes.receitas.map(r => ({ ...r, id: nanoid() }));
-                            despesas = ultimoMes.despesas.filter(d => d.descricao !== 'Outras').map(d => ({ ...d, id: nanoid(), historico_gastos: [] }));
+                            despesas = ultimoMes.despesas.map(d => {
+                              if (d.descricao === 'Outras') {
+                                return { ...d, id: nanoid(), gastei: 0, historico_gastos: [] };
+                              }
+                              return { ...d, id: nanoid(), historico_gastos: [] };
+                            });
 
                           }
                           const novoMes: MesData = {
