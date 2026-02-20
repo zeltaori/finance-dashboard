@@ -128,12 +128,16 @@ function App() {
       }
     };
     
-    saveToFirebase();
+    // Adicionar delay de 1 segundo para garantir que o React atualizou o estado
+    const timeout = setTimeout(saveToFirebase, 1000);
     
     // Também fazer backup a cada 30 segundos como fallback
     const interval = setInterval(saveToFirebase, 30000);
-
-     return () => clearInterval(interval);
+    
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [user, meses, isBackupInProgress]);
 
 
