@@ -871,15 +871,17 @@ function App() {
                   <Label className="text-sm font-semibold" style={{ color: textColorLabel }}>Fins de Semana</Label>
                   <Input
                     type="number"
-                    value={mesData?.finsDeSemana || 4}
+                    value={mesData?.finsDeSemana ?? ''}
                     onChange={(e) => {
                       const novosMeses = [...meses];
+                      const valor = e.target.value === '' ? 0 : parseInt(e.target.value);
                       novosMeses[mesSelecionado] = {
                         ...novosMeses[mesSelecionado],
-                        finsDeSemana: parseInt(e.target.value) || 0
+                        finsDeSemana: isNaN(valor) ? 0 : valor
                       };
                       setMeses(novosMeses);
                     }}
+                    placeholder="0"
                     className={isDark ? 'bg-slate-700 border-slate-600 text-slate-50' : ''}
                   />
                 </div>
