@@ -70,6 +70,7 @@ function App() {
     return new Date(hoje.getFullYear(), hoje.getMonth(), ultimoDia);
   });
   const [copiarDados, setCopiarDados] = useState(true);
+  const [isBackupInProgress, setIsBackupInProgress] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
@@ -109,16 +110,21 @@ function App() {
 
   // Fazer backup automático quando dados mudam (imediatamente + a cada 30 segundos como fallback)
   useEffect(() => {
-    if (!user) return;
+    if (!user || isBackupInProgress) return;
     
     // Salvar imediatamente quando dados mudam
     const saveToFirebase = async () => {
+      if (isBackupInProgress) return; // Não fazer backup se um já está em progresso
+      
+      setIsBackupInProgress(true);
       try {
         console.log('Salvando dados no Firebase...');
         await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' });
         console.log('Dados salvos no Firebase com sucesso');
       } catch (error) {
         console.error('Erro ao salvar dados no Firebase:', error);
+      } finally {
+        setIsBackupInProgress(false);
       }
     };
     
@@ -127,8 +133,9 @@ function App() {
     // Também fazer backup a cada 30 segundos como fallback
     const interval = setInterval(saveToFirebase, 30000);
 
-    return () => clearInterval(interval);
-  }, [user, meses]);
+     return () => clearInterval(interval);
+  }, [user, meses, isBackupInProgress]);
+
 
   const loadBackups = async () => {
     try {
