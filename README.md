@@ -1,0 +1,1 @@
+# Versão corrigida - Base simplificada
