@@ -306,7 +306,10 @@ function App() {
   // Calcular total_despesas dinamicamente
   const calcularTotalDespesas = () => {
     return mesData?.despesas?.reduce((sum, d) => {
-      if (d.isOutras) return sum;
+      if (d.isOutras) {
+        // Para "Outras", somar o que foi gasto
+        return sum + Math.abs(d.gastei || 0);
+      }
       return sum + Math.abs(d.valor);
     }, 0) || 0;
   };
