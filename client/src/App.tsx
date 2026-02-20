@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -63,14 +62,6 @@ function App() {
   const [user, setUser] = useState<any>(null);
   const [backups, setBackups] = useState<BackupFile[]>([]);
   const [showBackupDialog, setShowBackupDialog] = useState(false);
-  const [showNovoMesDialog, setShowNovoMesDialog] = useState(false);
-  const [novoMesData, setNovoMesData] = useState<Date | undefined>(() => {
-    const hoje = new Date();
-    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-    return new Date(hoje.getFullYear(), hoje.getMonth(), ultimoDia);
-  });
-  const [copiarDados, setCopiarDados] = useState(true);
-  const [isBackupInProgress, setIsBackupInProgress] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const mesData = meses[mesSelecionado];
@@ -110,36 +101,26 @@ function App() {
 
   // Fazer backup automático quando dados mudam (imediatamente + a cada 30 segundos como fallback)
   useEffect(() => {
-    if (!user || isBackupInProgress) return;
+    if (!user) return;
     
     // Salvar imediatamente quando dados mudam
     const saveToFirebase = async () => {
-      if (isBackupInProgress) return; // Não fazer backup se um já está em progresso
-      
-      setIsBackupInProgress(true);
       try {
         console.log('Salvando dados no Firebase...');
         await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' });
         console.log('Dados salvos no Firebase com sucesso');
       } catch (error) {
         console.error('Erro ao salvar dados no Firebase:', error);
-      } finally {
-        setIsBackupInProgress(false);
       }
     };
     
-    // Adicionar delay de 1 segundo para garantir que o React atualizou o estado
-    const timeout = setTimeout(saveToFirebase, 1000);
+    saveToFirebase();
     
     // Também fazer backup a cada 30 segundos como fallback
     const interval = setInterval(saveToFirebase, 30000);
-    
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    };
-  }, [user, meses, isBackupInProgress]);
 
+    return () => clearInterval(interval);
+  }, [user, meses]);
 
   const loadBackups = async () => {
     try {
@@ -564,123 +545,24 @@ function App() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Poppins, sans-serif', color: textColorH2 }}>Selecione o Mês</h2>
               <div className="flex gap-2">
-                <Dialog open={showNovoMesDialog} onOpenChange={setShowNovoMesDialog}>
-                  <Button
-                    onClick={() => setShowNovoMesDialog(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    + Novo Mês
-                  </Button>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Adicionar Novo Mês</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-4">
-                        <div>
-                          <Label className="mb-2 block">Mês:</Label>
-                          <select
-                            value={novoMesData ? novoMesData.getMonth() : new Date().getMonth()}
-                            onChange={(e) => {
-                              const mes = parseInt(e.target.value);
-                              const ano = novoMesData ? novoMesData.getFullYear() : new Date().getFullYear();
-                              const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-                              setNovoMesData(new Date(ano, mes, ultimoDia));
-                            }}
-                            className="w-full p-2 border rounded-md bg-background text-foreground"
-                          >
-                            {Array.from({ length: 12 }, (_, i) => {
-                              const data = new Date(2026, i, 1);
-                              const nomeMes = data.toLocaleString('pt-BR', { month: 'long' });
-                              return (
-                                <option key={i} value={i}>
-                                  {nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </div>
-                        <div>
-                          <Label className="mb-2 block">Ano:</Label>
-                          <select
-                            value={novoMesData ? novoMesData.getFullYear() : new Date().getFullYear()}
-                            onChange={(e) => {
-                              const ano = parseInt(e.target.value);
-                              const mes = novoMesData ? novoMesData.getMonth() : new Date().getMonth();
-                              const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-                              setNovoMesData(new Date(ano, mes, ultimoDia));
-                            }}
-                            className="w-full p-2 border rounded-md bg-background text-foreground"
-                          >
-                            {Array.from({ length: 10 }, (_, i) => {
-                              const ano = 2020 + i;
-                              return (
-                                <option key={ano} value={ano}>
-                                  {ano}
-                                </option>
-                              );
-                            })}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="copiarDados"
-                          checked={copiarDados}
-                          onChange={(e) => setCopiarDados(e.target.checked)}
-                          className="rounded border-gray-300"
-                        />
-                        <Label htmlFor="copiarDados" className="cursor-pointer">
-                          Copiar receitas e despesas do mês anterior
-                        </Label>
-                      </div>
-                      <Button
-                        onClick={() => {
-                          if (!novoMesData) {
-                            alert('Selecione uma data');
-                            return;
-                          }
-                          const ultimoMes = meses[meses.length - 1];
-                          const nomeMes = novoMesData.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
-                          let receitas: Receita[] = [];
-                          let despesas: Despesa[] = [];
-                          if (copiarDados) {
-                            receitas = ultimoMes.receitas.map(r => ({ ...r, id: nanoid() }));
-                            despesas = ultimoMes.despesas.map(d => {
-                              if (d.descricao === 'Outras') {
-                                return { ...d, id: nanoid(), valor: 0, gastei: 0, historico_gastos: [] };
-                              }
-                              return { ...d, id: nanoid(), historico_gastos: [] };
-                            });
-
-                          }
-                          const total_receitas = receitas.reduce((sum, r) => sum + r.valor, 0);
-                          const total_despesas = despesas.reduce((sum, d) => sum + Math.abs(d.valor), 0);
-                          const sobra = total_receitas - total_despesas;
-                          const novoMes: MesData = {
-                            nome: nomeMes,
-                            receitas,
-                            despesas,
-                            total_receitas,
-                            total_despesas,
-                            sobra,
-                            dataFinal: novoMesData.toISOString().split('T')[0],
-                            finsDeSemana: ultimoMes.finsDeSemana
-                          };
-                          setMeses([...meses, novoMes]);
-                          setMesSelecionado(meses.length);
-                          setShowNovoMesDialog(false);
-                          setNovoMesData(undefined);
-                          setCopiarDados(true);
-                        }}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Criar Mês
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  onClick={() => {
+                    const ultimoMes = meses[meses.length - 1];
+                    const novoMes: MesData = {
+                      nome: 'Novo Mês',
+                      receitas: ultimoMes.receitas.map(r => ({ ...r, id: nanoid() })),
+                      despesas: ultimoMes.despesas.map(d => ({ ...d, id: nanoid(), historico_gastos: [] })),
+                      total_receitas: ultimoMes.total_receitas,
+                      total_despesas: ultimoMes.total_despesas,
+                      sobra: ultimoMes.sobra
+                    };
+                    setMeses([...meses, novoMes]);
+                    setMesSelecionado(meses.length);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  + Novo Mês
+                </Button>
                 <Button
                   variant="outline"
                   size="icon"
@@ -703,39 +585,19 @@ function App() {
               style={{ scrollBehavior: 'smooth' }}
             >
               {meses.map((mes, index) => (
-                <div
+                <button
                   key={index}
-                  className="flex items-center gap-1"
+                  onClick={() => setMesSelecionado(index)}
+                  className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
+                    mesSelecionado === index
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : isDark
+                      ? 'bg-slate-800 hover:bg-slate-700 text-slate-100'
+                      : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                  }`}
                 >
-                  <button
-                    onClick={() => setMesSelecionado(index)}
-                    className={`px-4 py-2 rounded-lg whitespace-nowrap font-semibold transition-colors ${
-                      mesSelecionado === index
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : isDark
-                        ? 'bg-slate-800 hover:bg-slate-700 text-slate-100'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
-                    }`}
-                  >
-                    {mes.nome}
-                  </button>
-                  {meses.length > 1 && mesSelecionado === index && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const novosMeses = meses.filter((_, i) => i !== index);
-                        setMeses(novosMeses);
-                        if (mesSelecionado >= novosMeses.length) {
-                          setMesSelecionado(Math.max(0, novosMeses.length - 1));
-                        }
-                      }}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
+                  {mes.nome}
+                </button>
               ))}
             </div>
           </div>
