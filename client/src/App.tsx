@@ -326,7 +326,7 @@ function App() {
   const totalReceitas = calcularTotalReceitas();
   const totalDespesas = calcularTotalDespesas();
   const diasRestantes = calcularDiasRestantes();
-  const sobra = totalReceitas - totalDespesas + calcularVRFDSFalta() - calcularGastosOutras();
+  const sobra = totalReceitas - totalDespesas + calcularVRFDSFalta();
   const saldoVR = calcularSaldoVR();
   const totalLivre = sobra + dinheiroEspecie;
   const finsDeSemana = mesData?.finsDeSemana || 4;
