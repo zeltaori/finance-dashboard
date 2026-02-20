@@ -122,19 +122,34 @@ function App() {
     const saveToFirebase = async () => {
       try {
         console.log('Salvando dados no Firebase...');
-        await firebaseService.backup({ meses, timestamp: new Date().toISOString(), versao: '1.0' });
+        // Fazer deep clone para garantir que todos os dados sejam capturados
+        const backupData = {
+          meses: JSON.parse(JSON.stringify(meses)),
+          timestamp: new Date().toISOString(),
+          versao: '1.0'
+        };
+        // Log detalhado de cada mês sendo salvo
+        backupData.meses.forEach((mes: any, index: number) => {
+          console.log(`userData.dataFinal mudou para: ${mes.dataFinal}`);
+          console.log(`userData.finsDeSemana mudou para: ${mes.finsDeSemana}`);
+        });
+        await firebaseService.backup(backupData);
         console.log('Dados salvos no Firebase com sucesso');
       } catch (error) {
         console.error('Erro ao salvar dados no Firebase:', error);
       }
     };
     
-    saveToFirebase();
+    // Adicionar delay de 2 segundos para garantir que o React atualizou o estado
+    const timeout = setTimeout(saveToFirebase, 2000);
     
     // Também fazer backup a cada 30 segundos como fallback
     const interval = setInterval(saveToFirebase, 30000);
-
-    return () => clearInterval(interval);
+    
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
   }, [user, meses]);
 
   const loadBackups = async () => {
@@ -158,6 +173,11 @@ function App() {
         console.log('Dados do usuario:', userData);
         if (userData && userData.meses && userData.meses.length > 0) {
           console.log('Carregando meses do Firebase:', userData.meses.length);
+          // Log detalhado de cada mês
+          userData.meses.forEach((mes: any, index: number) => {
+            console.log(`userData.dataFinal mudou para: ${mes.dataFinal}`);
+            console.log(`userData.finsDeSemana mudou para: ${mes.finsDeSemana}`);
+          });
           setMeses(userData.meses);
         } else {
           console.log('Nenhum dado de meses encontrado no backup, usando base simplificada');
@@ -278,6 +298,19 @@ function App() {
     return (vrSemana ? vrSemana.falta : 0) + (vrFds ? vrFds.falta : 0);
   };
 
+  // Calcular total_receitas dinamicamente
+  const calcularTotalReceitas = () => {
+    return mesData?.receitas?.reduce((sum, r) => sum + r.valor, 0) || 0;
+  };
+
+  // Calcular total_despesas dinamicamente
+  const calcularTotalDespesas = () => {
+    return mesData?.despesas?.reduce((sum, d) => {
+      if (d.isOutras) return sum;
+      return sum + Math.abs(d.valor);
+    }, 0) || 0;
+  };
+
   // Calcular dias restantes
   const calcularDiasRestantes = () => {
     const hoje = new Date(dataHoje);
@@ -287,8 +320,10 @@ function App() {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
+  const totalReceitas = calcularTotalReceitas();
+  const totalDespesas = calcularTotalDespesas();
   const diasRestantes = calcularDiasRestantes();
-  const sobra = calcularSobra();
+  const sobra = totalReceitas - totalDespesas + calcularVRFDSFalta() - calcularGastosOutras();
   const saldoVR = calcularSaldoVR();
   const totalLivre = sobra + dinheiroEspecie;
   const finsDeSemana = mesData?.finsDeSemana || 4;
@@ -749,7 +784,7 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="text-lg md:text-2xl font-bold text-green-500">
-                  {formatCurrency(mesData.total_receitas)}
+                  {formatCurrency(totalReceitas)}
                 </div>
               </CardContent>
             </Card>
@@ -760,7 +795,7 @@ function App() {
               </CardHeader>
               <CardContent>
                 <div className="text-lg md:text-2xl font-bold text-red-500">
-                  {formatCurrency(mesData.total_despesas)}
+                  {formatCurrency(totalDespesas)}
                 </div>
               </CardContent>
             </Card>
